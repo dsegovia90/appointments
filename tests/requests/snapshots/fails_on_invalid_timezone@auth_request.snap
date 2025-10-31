@@ -1,0 +1,8 @@
+---
+source: tests/requests/auth.rs
+expression: "(register_response.status_code(), register_response.text())"
+---
+(
+    500,
+    "{\"error\":\"internal_server_error\",\"description\":\"Internal Server Error\"}",
+)

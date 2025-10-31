@@ -1,0 +1,11 @@
+---
+source: tests/models/users.rs
+expression: new_user
+---
+Err(
+    DbErr(
+        Custom(
+            "{\"timezone\":[{\"code\":\"timezone\",\"message\":\"Invalid timezone\"}]}",
+        ),
+    ),
+)

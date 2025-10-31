@@ -1,0 +1,65 @@
+[package]
+name = "appointments"
+version = "0.1.0"
+edition = "2021"
+publish = false
+default-run = "appointments-cli"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[package.metadata.db.entity]
+model-extra-derives = "ts_rs::TS"
+
+[workspace]
+[workspace.dependencies]
+loco-rs = { version = "0.16.4" }
+
+[[bin]]
+name = "appointments-cli"
+path = "src/bin/main.rs"
+required-features = []
+
+[dependencies]
+# /view engine
+async-trait = { version = "0.1.74" }
+axum = { version = "0.8.1" }
+chrono = { version = "0.4", features = ["serde"] }
+chrono-tz = { version = "0.10.0", features = ["serde"] }
+# view engine i18n
+fluent-templates = { version = "0.8.0", features = ["tera"] }
+include_dir = { version = "0.7" }
+itertools = "0.14.0"
+lazy_static = "1.5.0"
+loco-rs = { workspace = true }
+migration = { path = "migration" }
+now = "0.1.3"
+regex = { version = "1.11.1" }
+sea-orm = { version = "1.1.0", features = [
+  "macros",
+  "runtime-tokio-rustls",
+  "sqlx-postgres",
+  "sqlx-sqlite",
+] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1" }
+stringcase = "0.4.0"
+thiserror = "2.0.11"
+tokio = { version = "1.33.0", default-features = false, features = [
+  "rt-multi-thread",
+] }
+tracing = { version = "0.1.40" }
+tracing-subscriber = { version = "0.3.17", features = ["env-filter", "json"] }
+ts-rs = { version = "11.0.1", features = ["chrono-impl", "uuid-impl"] }
+unic-langid = { version = "0.9.4" }
+uuid = { version = "1.6.0", features = ["v4"] }
+validator = { version = "0.20" }
+
+[dev-dependencies]
+insta = { version = "1.34.0", features = ["filters", "redactions", "yaml"] }
+loco-rs = { workspace = true, features = ["testing"] }
+rstest = { version = "0.21.0" }
+serial_test = { version = "3.1.1" }
+
+[features]
+default = []
+mock-time = []

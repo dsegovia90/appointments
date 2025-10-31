@@ -1,0 +1,10 @@
+---
+source: tests/models/availabilities.rs
+expression: user_availability
+---
+Model {
+    created_at: DATE,
+    updated_at: DATE,
+    id: ID
+    belongs_to: 1,
+}

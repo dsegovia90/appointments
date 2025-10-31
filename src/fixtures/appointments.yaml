@@ -1,0 +1,25 @@
+---
+- id: 1
+  user_id: 1
+  booker_name: Daniel
+  booker_phone: "555555555"
+  booker_timezone: America/Los_Angeles
+  booker_email: daniel@example.com
+  start_time: "2025-01-13T18:00:00.000Z"
+  endtime: "2025-01-13T19:00:00.000Z"
+  status: Booked
+  created_at: "2023-11-12T12:34:56.789Z"
+  updated_at: "2023-11-12T12:34:56.789Z"
+  appointment_type_id: 2
+- id: 2
+  user_id: 1
+  booker_name: Cancelled Daniel
+  booker_phone: "555555555"
+  booker_timezone: America/Los_Angeles
+  booker_email: daniel@example.com
+  start_time: "2025-01-13T20:00:00.000Z"
+  endtime: "2025-01-13T21:00:00.000Z"
+  status: Cancelled
+  created_at: "2023-11-12T12:34:56.789Z"
+  updated_at: "2023-11-12T12:34:56.789Z"
+  appointment_type_id: 2
