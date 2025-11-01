@@ -65,7 +65,7 @@ const handleUpdate = async (data: Partial<AdminSettings>) => {
           >
             <UInput
               v-model="adminSettings.google_cloud_api_key"
-              class="min-w-120"
+              class="w-full md:max-w-120"
               size="xl"
               :type="showGoogleCloudApiKey ? 'text' : 'password'"
             >

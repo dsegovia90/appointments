@@ -39,8 +39,13 @@ const items = computed<NavigationMenuItem[]>(() => {
   <UMain>
     <UHeader>
       <template #title> Admin Dashboard </template>
-      <template #left>
-        <UNavigationMenu :items="items" />
+      <UNavigationMenu :items="items" />
+      <template #body>
+        <UNavigationMenu
+          :items="items"
+          orientation="vertical"
+          class="-mx-2.5"
+        />
       </template>
       <template #right>
         <UColorModeButton />
