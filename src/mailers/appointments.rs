@@ -62,7 +62,7 @@ impl AppointmentsMailer {
             ctx,
             &notify_client,
             mailer::Args {
-                to: appointment.booker_email.to_string(),
+                to: appointment.booker_email.clone(),
                 locals: json!({
                     "user_name": user.name,
                     "booker_name": appointment.booker_name,

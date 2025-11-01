@@ -21,7 +21,7 @@ impl Initializer for AdminSettingsInitializer {
             }
             Err(err) => {
                 if let DbErr::Custom(ref msg) = err {
-                    let msg = msg.to_string();
+                    let msg = msg.clone();
                     if msg == "Only one admin setting allowed" {
                         tracing::info!("Admin settings already exist");
                         return Ok(());
