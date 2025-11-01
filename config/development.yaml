@@ -48,9 +48,16 @@ workers:
   #   - BackgroundQueue - Workers operate asynchronously in the background, processing queued.
   #   - ForegroundBlocking - Workers operate in the foreground and block until tasks are completed.
   #   - BackgroundAsync - Workers operate asynchronously in the background, processing tasks with async capabilities.
-  mode: BackgroundAsync
+  mode: BackgroundQueue
 
-
+queue:
+  kind: Sqlite
+  # SQLite Queue connection URI.
+  uri: "sqlite://appointments_development_queue.sqlite?mode=rwc"
+  # Dangerously flush all data.
+  dangerously_flush: false
+  # represents the number of tasks a worker can handle simultaneously.
+  num_workers: 1
 
 # Mailer Configuration.
 mailer:

@@ -52,6 +52,14 @@ workers:
   #   - BackgroundAsync - Workers operate asynchronously in the background, processing tasks with async capabilities.
   mode: BackgroundQueue
 
+queue:
+  kind: Sqlite
+  # SQLite Queue connection URI.
+  uri: "sqlite://db/appointments_production_queue.sqlite?mode=rwc"
+  # Dangerously flush all data.
+  dangerously_flush: false
+  # represents the number of tasks a worker can handle simultaneously.
+  num_workers: 1
 
 
 # Mailer Configuration.
