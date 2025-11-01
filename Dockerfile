@@ -123,4 +123,4 @@ ENV CARGO_PACKAGE_NAME=${CARGO_PACKAGE_NAME}
 
 # Use entrypoint with exec form CMD (prevents JSONArgsRecommended warning)
 ENTRYPOINT ["./docker-entrypoint.sh"]
-CMD ["start", "-e", "production"]
+CMD ["start", "-e", "production", "--server-and-worker"]
