@@ -141,12 +141,13 @@ checksum = "34ac096ce696dc2fcabef30516bb13c0a68a11d30131d3df6f04711467681b04"
 
 [[package]]
 name = "appointments"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-trait",
  "axum",
  "chrono",
  "chrono-tz 0.10.0",
+ "dotenvy",
  "fluent-templates",
  "include_dir",
  "insta",

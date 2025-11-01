@@ -13,7 +13,14 @@ static notify_client: Dir<'_> = include_dir!("src/mailers/appointments/notify_cl
 
 #[allow(clippy::module_name_repetitions)]
 pub struct AppointmentsMailer {}
-impl Mailer for AppointmentsMailer {}
+impl Mailer for AppointmentsMailer {
+    fn opts() -> mailer::MailerOpts {
+        mailer::MailerOpts {
+            from: std::env::var("DEFAULT_EMAIL_SENDER").unwrap(),
+            ..Default::default()
+        }
+    }
+}
 impl AppointmentsMailer {
     /// Send an email
     ///

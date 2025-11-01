@@ -45,9 +45,10 @@ impl Hooks for App {
     }
 
     async fn initializers(_ctx: &AppContext) -> Result<Vec<Box<dyn Initializer>>> {
-        Ok(vec![Box::new(
-            initializers::admin_settings::AdminSettingsInitializer,
-        )])
+        Ok(vec![
+            Box::new(initializers::env_vars::EnvVarsInitializer),
+            Box::new(initializers::admin_settings::AdminSettingsInitializer),
+        ])
     }
 
     fn routes(ctx: &AppContext) -> AppRoutes {

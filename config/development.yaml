@@ -106,3 +106,6 @@ auth:
     secret: TnYEuav3m16TdSdgAPSD
     # Token expiration time in seconds
     expiration: 604800 # 7 days
+
+settings:
+  default_email_sender: {{ get_env(name="DEFAULT_EMAIL_SENDER", default="example@example.com") }}
