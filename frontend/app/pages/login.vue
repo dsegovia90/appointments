@@ -27,7 +27,7 @@ const tabItems = [
 const passwordFields = ref<AuthFormField[]>([
   {
     name: "email",
-    type: "text",
+    type: "email",
     label: "Email",
   },
   {
@@ -55,7 +55,7 @@ const onPasswordSubmit = async (values: FormSubmitEvent<PasswordSchema>) => {
 const magicLinkFields = ref<AuthFormField[]>([
   {
     name: "email",
-    type: "text",
+    type: "email",
     label: "Email",
   },
 ]);

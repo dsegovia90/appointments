@@ -12,7 +12,7 @@ const userStore = useUserStore();
 const fields = ref<AuthFormField[]>([
   {
     name: "email",
-    type: "text",
+    type: "email",
     label: "Email",
   },
   {
