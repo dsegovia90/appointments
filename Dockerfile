@@ -3,7 +3,7 @@
 ARG CARGO_PACKAGE_NAME=appointments-cli
 
 # Stage 1: Base image with build tools
-FROM rust:1.90-slim AS rust-base
+FROM rust:1.91-slim AS rust-base
 
 # Install system dependencies for building
 RUN apt-get update && apt-get install -y \
