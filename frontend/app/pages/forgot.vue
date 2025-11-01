@@ -62,7 +62,7 @@ const handlePasswordChangeSubmit = async (
 const forgotFields = ref<AuthFormField[]>([
   {
     name: "email",
-    type: "text",
+    type: "email",
     label: "Email",
   },
 ]);

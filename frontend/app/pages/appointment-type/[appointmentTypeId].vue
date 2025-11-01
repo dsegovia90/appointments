@@ -219,7 +219,7 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
         </UFormField>
 
         <UFormField label="Email" name="booker_email" size="xl" required>
-          <UInput v-model="state.booker_email" class="w-full" />
+          <UInput v-model="state.booker_email" type="email" class="w-full" />
         </UFormField>
 
         <UFormField label="Phone" name="booker_phone" size="xl" required>
