@@ -1,5 +1,6 @@
 # Feature List
 
+- [ ] Make days from and to configurable in weekly_availabilities instead of 0 to 14 days.
 - [ ] Google meet/calendar integration and send meeting link via email
 - [ ] Multi user support
   - [ ] Share appointment_types, enable and disable users per appointment_types
