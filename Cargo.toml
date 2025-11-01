@@ -1,6 +1,6 @@
 [package]
 name = "appointments"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 publish = false
 default-run = "appointments-cli"
@@ -25,6 +25,7 @@ async-trait = { version = "0.1.74" }
 axum = { version = "0.8.1" }
 chrono = { version = "0.4", features = ["serde"] }
 chrono-tz = { version = "0.10.0", features = ["serde"] }
+dotenvy = "0.15.7"
 # view engine i18n
 fluent-templates = { version = "0.8.0", features = ["tera"] }
 include_dir = { version = "0.7" }

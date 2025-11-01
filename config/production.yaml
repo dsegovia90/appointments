@@ -59,16 +59,16 @@ mailer:
   # SMTP mailer configuration.
   smtp:
     # Enable/Disable smtp mailer.
-    enable: false
+    enable: true
     # SMTP server host. e.x localhost, smtp.gmail.com
-    host: localhost
+    host: {{ get_env(name="SMTP_HOST", default="localhost") }}
     # SMTP server port
-    port: 1025
+    port: {{ get_env(name="SMTP_PORT", default="1025") }}
     # Use secure connection (SSL/TLS).
-    secure: false
-    # auth:
-    #   user:
-    #   password:
+    secure: true
+    auth:
+      user: {{ get_env(name="SMTP_USER", default="") }}
+      password: {{ get_env(name="SMTP_PASSWORD", default="") }}
     # Override the SMTP hello name (default is the machine's hostname)
     # hello_name:
 
@@ -108,3 +108,6 @@ auth:
     secret: {{ get_env(name="JWT_SECRET", default="") }}
     # Token expiration time in seconds
     expiration: 604800 # 7 days
+
+settings:
+  default_email_sender: {{ get_env(name="DEFAULT_EMAIL_SENDER", default="") }}
