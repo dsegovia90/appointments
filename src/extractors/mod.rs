@@ -1,4 +1,7 @@
-use axum::{extract::FromRequestParts, http::{HeaderMap, request::Parts}};
+use axum::{
+    extract::FromRequestParts,
+    http::{request::Parts, HeaderMap},
+};
 use chrono_tz::{ParseError, Tz};
 
 pub struct Timezone(pub Tz);
@@ -11,8 +14,8 @@ where
 
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
         let headers = HeaderMap::from_request_parts(parts, state)
-                   .await
-                   .map_err(|err| loco_rs::errors::Error::Message(err.to_string()))?;
+            .await
+            .map_err(|err| loco_rs::errors::Error::Message(err.to_string()))?;
 
         let timezone = headers
             .get("timezone")

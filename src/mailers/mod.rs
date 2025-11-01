@@ -1,3 +1,2 @@
-pub mod auth;
-
 pub mod appointments;
+pub mod auth;
