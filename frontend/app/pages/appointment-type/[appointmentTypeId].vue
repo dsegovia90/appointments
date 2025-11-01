@@ -104,7 +104,7 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
 </script>
 
 <template>
-  <div class="grid grid-cols-2 grid-rows-2 min-h-dvh py-20 gap-8">
+  <div class="grid md:grid-cols-2 md:grid-rows-2 md:min-h-dvh py-20 gap-8">
     <LoadingLinear v-if="loading" class="col-span-2 row-span-2" />
     <div v-else-if="submitted" class="col-span-2 row-span-2 flex items-center">
       <UCard class="max-w-md sm:min-w-md mx-auto" variant="soft">
@@ -125,8 +125,8 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
       </UCard>
     </div>
     <template v-else>
-      <UCard :ui="{ body: 'flex gap-8' }">
-        <div>
+      <UCard :ui="{ body: 'flex flex-wrap gap-8 justify-center h-auto' }">
+        <div class="flex-1">
           <h1>
             {{
               appointmentTypeStore.appointmentTypes.get(
@@ -211,7 +211,7 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
         v-if="selectedTime"
         :schema="schema"
         :state="state"
-        class="col-span-2 space-y-4 max-w-md w-full mx-auto"
+        class="md:col-span-2 space-y-4 max-w-md w-full mx-auto"
         @submit="onSubmit"
       >
         <UFormField label="Name" name="booker_name" size="xl" required>
