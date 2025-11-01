@@ -68,7 +68,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version-file: ".bun-version"
+          bun-version-file: "frontend/.bun-version"
       - name: Build frontend
         run: bun install && bun run generate
         working-directory: ./frontend
