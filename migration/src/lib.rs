@@ -9,6 +9,9 @@ mod m20251015_012003_appointment_types;
 mod m20251015_013448_appointments;
 mod m20251030_084125_add_roles_to_user_table;
 mod m20251030_091125_admin_settings;
+mod m20251105_045209_google_calendars;
+mod m20251105_051656_oauth_states;
+mod m20251106_005544_add_google_calendar_json_to_admin_settings;
 pub struct Migrator;
 
 #[async_trait::async_trait]
@@ -21,6 +24,9 @@ impl MigratorTrait for Migrator {
             Box::new(m20251015_013448_appointments::Migration),
             Box::new(m20251030_084125_add_roles_to_user_table::Migration),
             Box::new(m20251030_091125_admin_settings::Migration),
+            Box::new(m20251105_045209_google_calendars::Migration),
+            Box::new(m20251105_051656_oauth_states::Migration),
+            Box::new(m20251106_005544_add_google_calendar_json_to_admin_settings::Migration),
             // inject-above (do not remove this comment)
         ]
     }

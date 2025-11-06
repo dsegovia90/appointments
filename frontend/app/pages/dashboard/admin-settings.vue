@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { AdminSettings } from "~/bindings/AdminSettings";
+import GoogleCalendarSettingsForm from "~/components/GoogleCalendarSettingsForm.vue";
 import { useAdminSettingsAPI } from "~/composables/useAdminSettingsAPI";
 
 const adminSettings = ref<AdminSettings>();
 const { fetch, update } = useAdminSettingsAPI();
-const showGoogleCloudApiKey = ref(false);
 
 onMounted(async () => {
   adminSettings.value = await fetch();
@@ -57,61 +57,10 @@ const handleUpdate = async (data: Partial<AdminSettings>) => {
 
         <h2 class="text-2xl font-bold">Notification Settings</h2>
 
-        <div class="space-y-4">
-          <UFormField
-            label="Google API Key"
-            description="Once set, the field will be hidden."
-            size="xl"
-          >
-            <UInput
-              v-model="adminSettings.google_cloud_api_key"
-              class="w-full md:max-w-120"
-              size="xl"
-              :type="showGoogleCloudApiKey ? 'text' : 'password'"
-            >
-              <template
-                v-if="adminSettings.google_cloud_api_key?.length"
-                #trailing
-              >
-                <UButton
-                  color="neutral"
-                  variant="link"
-                  size="sm"
-                  icon="i-lucide-circle-x"
-                  aria-label="Clear input"
-                  @click="
-                    handleUpdate({
-                      google_cloud_api_key: '',
-                    })
-                  "
-                />
-                <UButton
-                  color="neutral"
-                  variant="link"
-                  size="sm"
-                  :icon="
-                    showGoogleCloudApiKey ? 'i-lucide-eye-off' : 'i-lucide-eye'
-                  "
-                  :aria-label="
-                    showGoogleCloudApiKey ? 'Hide password' : 'Show password'
-                  "
-                  :aria-pressed="showGoogleCloudApiKey"
-                  aria-controls="password"
-                  @click="showGoogleCloudApiKey = !showGoogleCloudApiKey"
-                />
-              </template>
-            </UInput>
-          </UFormField>
-          <UButton
-            label="Save"
-            size="xl"
-            @click="
-              handleUpdate({
-                google_cloud_api_key: adminSettings.google_cloud_api_key,
-              })
-            "
-          />
-        </div>
+        <GoogleCalendarSettingsForm
+          :initial-values="adminSettings.google_calendar_settings || undefined"
+          @submit="(value) => handleUpdate({ google_calendar_settings: value })"
+        />
       </template>
     </UPageBody>
   </div>
