@@ -45,7 +45,6 @@ pub async fn get_calendars(
     State(ctx): State<AppContext>,
     user: users::Model,
 ) -> Result<Json<Vec<CalendarEntry>>> {
-    // Exchange the authorization code for an access token
     let google_calendar_settings = AdminSettings::get_google_calendar_settings(&ctx.db).await?;
     let google_calendar_config = GoogleCalendars::find_by_user(&ctx.db, &user).await?;
     let redirect_url = google_calendars::OAuthUrl::redirect_uri(&google_calendar_settings)?;

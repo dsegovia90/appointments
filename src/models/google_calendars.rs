@@ -7,8 +7,12 @@ use crate::{
         oauth_states::{self, OAuthStates},
         users::{self, Users},
     },
-    views::google_calendars::{CalendarSettingParams, CalendarSettingType},
+    views::{
+        client_facing::AvailabilityWindow,
+        google_calendars::{CalendarSettingParams, CalendarSettingType},
+    },
 };
+use google_calendar::types::FreeBusyRequestItem;
 use loco_rs::prelude::*;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -229,19 +233,56 @@ impl Model {
         Ok(active_model.update(db).await?)
     }
 
-    // #[must_use]
-    // fn add_to_unique_stringvec(x: StringVec, id: &str) -> StringVec {
-    //     let mut hash_set: HashSet<String> = x.0.into_iter().collect();
-    //     hash_set.insert(id.to_string());
-    //     StringVec(hash_set.into_iter().collect())
-    // }
+    pub async fn get_free_busy<C: ConnectionTrait>(
+        db: &C,
+        user: &users::Model,
+        time_min: DateTimeUtc,
+        time_max: DateTimeUtc,
+    ) -> Result<Vec<AvailabilityWindow>> {
+        let google_calendar_settings = AdminSettings::get_google_calendar_settings(db).await?;
+        let google_calendar_config = GoogleCalendars::find_by_user(db, user).await?;
+        let redirect_url = OAuthUrl::redirect_uri(&google_calendar_settings)?;
 
-    // #[must_use]
-    // fn remove_from_unique_stringvec(x: StringVec, id: &str) -> StringVec {
-    //     let mut hash_set: HashSet<String> = x.0.into_iter().collect();
-    //     hash_set.remove(id);
-    //     StringVec(hash_set.into_iter().collect())
-    // }
+        let client = google_calendar::Client::new(
+            google_calendar_settings.google_oauth_client_id,
+            google_calendar_settings.google_oauth_secret,
+            redirect_url,
+            google_calendar_config.access_token,
+            google_calendar_config.refresh_token,
+        );
+
+        let _access_token = client.refresh_access_token().await.map_err(Error::wrap)?;
+
+        let items = google_calendar_config
+            .calendars_for_collision_check
+            .0
+            .into_iter()
+            .map(|id| FreeBusyRequestItem { id })
+            .collect();
+
+        let query = google_calendar::types::FreeBusyRequest {
+            items,
+            time_min: Some(time_min),
+            time_max: Some(time_max),
+            calendar_expansion_max: 0,
+            group_expansion_max: 0,
+            time_zone: String::new(),
+        };
+
+        let free_busy_response = client.freebusy().query(&query).await.map_err(Error::wrap)?;
+        let availability_windows = free_busy_response
+            .body
+            .calendars
+            .into_iter()
+            .flat_map(|cal| {
+                cal.1.busy.into_iter().map(|x| AvailabilityWindow {
+                    start: x.start,
+                    end: x.end,
+                })
+            })
+            .collect();
+        Ok(availability_windows)
+    }
 }
 
 // implement your write-oriented logic here
