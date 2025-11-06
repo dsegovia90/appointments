@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AdminSettings } from "~/bindings/AdminSettings";
-import GoogleCalendarSettingsForm from "~/components/GoogleCalendarSettingsForm.vue";
+import GoogleCalendarAdminSettingsForm from "~/components/GoogleCalendarAdminSettingsForm.vue";
 import { useAdminSettingsAPI } from "~/composables/useAdminSettingsAPI";
 
 const adminSettings = ref<AdminSettings>();
@@ -57,7 +57,7 @@ const handleUpdate = async (data: Partial<AdminSettings>) => {
 
         <h2 class="text-2xl font-bold">Notification Settings</h2>
 
-        <GoogleCalendarSettingsForm
+        <GoogleCalendarAdminSettingsForm
           :initial-values="adminSettings.google_calendar_settings || undefined"
           @submit="(value) => handleUpdate({ google_calendar_settings: value })"
         />

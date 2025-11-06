@@ -12,6 +12,7 @@ mod m20251030_091125_admin_settings;
 mod m20251105_045209_google_calendars;
 mod m20251105_051656_oauth_states;
 mod m20251106_005544_add_google_calendar_json_to_admin_settings;
+mod m20251106_105710_add_collision_and_events_to_google_calendars;
 pub struct Migrator;
 
 #[async_trait::async_trait]
@@ -27,6 +28,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20251105_045209_google_calendars::Migration),
             Box::new(m20251105_051656_oauth_states::Migration),
             Box::new(m20251106_005544_add_google_calendar_json_to_admin_settings::Migration),
+            Box::new(m20251106_105710_add_collision_and_events_to_google_calendars::Migration),
             // inject-above (do not remove this comment)
         ]
     }

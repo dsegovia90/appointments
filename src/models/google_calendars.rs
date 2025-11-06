@@ -2,11 +2,12 @@ pub use super::_entities::google_calendars::{ActiveModel, Entity, Model};
 use crate::{
     controllers::api::integrations::google_calendar::OAuthCallbackQueryParams,
     models::{
-        _entities::admin_settings::GoogleCalendarSettings,
+        _entities::{admin_settings::GoogleCalendarSettings, google_calendars::Column},
         admin_settings::AdminSettings,
         oauth_states::{self, OAuthStates},
         users::{self, Users},
     },
+    views::google_calendars::{CalendarSettingParams, CalendarSettingType},
 };
 use loco_rs::prelude::*;
 use sea_orm::entity::prelude::*;
@@ -183,6 +184,64 @@ impl Model {
             }
         }
     }
+
+    pub async fn add_calendar_to_settings<C: ConnectionTrait>(
+        &self,
+        db: &C,
+        params: CalendarSettingParams,
+    ) -> Result<Self> {
+        let mut active_model = self.clone().into_active_model();
+        match params.setting_type {
+            CalendarSettingType::CollisionCheck => {
+                let mut cloned = self.calendars_for_collision_check.clone();
+                cloned.add(params.calendar_id);
+                active_model.calendars_for_collision_check = ActiveValue::Set(cloned);
+            }
+            CalendarSettingType::EventHandling => {
+                let mut cloned = self.calendars_for_event_handling.clone();
+                cloned.add(params.calendar_id);
+                active_model.calendars_for_event_handling = ActiveValue::Set(cloned);
+            }
+        }
+
+        Ok(active_model.update(db).await?)
+    }
+
+    pub async fn remove_calendar_from_settings<C: ConnectionTrait>(
+        &self,
+        db: &C,
+        params: CalendarSettingParams,
+    ) -> Result<Self> {
+        let mut active_model = self.clone().into_active_model();
+        match params.setting_type {
+            CalendarSettingType::CollisionCheck => {
+                let mut cloned = self.calendars_for_collision_check.clone();
+                cloned.remove(&params.calendar_id);
+                active_model.calendars_for_collision_check = ActiveValue::Set(cloned);
+            }
+            CalendarSettingType::EventHandling => {
+                let mut cloned = self.calendars_for_event_handling.clone();
+                cloned.remove(&params.calendar_id);
+                active_model.calendars_for_event_handling = ActiveValue::Set(cloned);
+            }
+        }
+
+        Ok(active_model.update(db).await?)
+    }
+
+    // #[must_use]
+    // fn add_to_unique_stringvec(x: StringVec, id: &str) -> StringVec {
+    //     let mut hash_set: HashSet<String> = x.0.into_iter().collect();
+    //     hash_set.insert(id.to_string());
+    //     StringVec(hash_set.into_iter().collect())
+    // }
+
+    // #[must_use]
+    // fn remove_from_unique_stringvec(x: StringVec, id: &str) -> StringVec {
+    //     let mut hash_set: HashSet<String> = x.0.into_iter().collect();
+    //     hash_set.remove(id);
+    //     StringVec(hash_set.into_iter().collect())
+    // }
 }
 
 // implement your write-oriented logic here
@@ -192,6 +251,13 @@ impl ActiveModel {
         props: OAuthTokenResponseSuccess,
         user: users::Model,
     ) -> Result<Model> {
+        if let Ok(existing_google_calendar) = GoogleCalendars::find_by_user(db, &user).await {
+            existing_google_calendar
+                .into_active_model()
+                .delete(db)
+                .await?;
+        }
+
         let active_model = Self {
             access_token: ActiveValue::Set(props.access_token),
             expires_in: ActiveValue::Set(props.expires_in),
@@ -207,4 +273,12 @@ impl ActiveModel {
 }
 
 // implement your custom finders, selectors oriented logic here
-impl Entity {}
+impl Entity {
+    pub async fn find_by_user<C: ConnectionTrait>(db: &C, user: &users::Model) -> Result<Model> {
+        let query = Self::find().filter(Column::UserId.eq(user.id));
+        query
+            .one(db)
+            .await?
+            .ok_or(Error::Model(ModelError::EntityNotFound))
+    }
+}
