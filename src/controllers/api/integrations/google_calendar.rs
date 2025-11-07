@@ -44,14 +44,14 @@ pub async fn oauth_callback(
 pub async fn revoke_and_delete_token(
     State(ctx): State<AppContext>,
     user: users::Model,
-) -> Result<Redirect> {
+) -> Result<Json<()>> {
     // Revoke the access token and delete the token from the database
     let google_calendar_config = GoogleCalendars::find_by_user(&ctx.db, &user).await?;
     google_calendar_config
         .revoke_and_delete_token(&ctx.db)
         .await?;
 
-    Ok(Redirect::to("/"))
+    Ok(Json(()))
 }
 
 #[debug_handler]
