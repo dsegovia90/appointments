@@ -1,4 +1,7 @@
+use crate::models::_entities::admin_settings::GoogleCalendarSettings;
+
 pub use super::_entities::admin_settings::{ActiveModel, Entity, Model};
+use loco_rs::prelude::*;
 use sea_orm::entity::prelude::*;
 pub type AdminSettings = Entity;
 
@@ -37,4 +40,20 @@ impl ActiveModel {
 }
 
 // implement your custom finders, selectors oriented logic here
-impl Entity {}
+impl Entity {
+    pub async fn load<C: ConnectionTrait>(db: &C) -> Result<Model> {
+        let item = Self::find().one(db).await?;
+        item.ok_or_else(|| Error::NotFound)
+    }
+
+    pub async fn get_google_calendar_settings(
+        db: &impl ConnectionTrait,
+    ) -> Result<GoogleCalendarSettings> {
+        let admin_settings = Self::load(db).await?;
+        admin_settings
+            .google_calendar_settings
+            .ok_or(Error::Message(
+                "Missing Google Calendar API settings.".to_string(),
+            ))
+    }
+}

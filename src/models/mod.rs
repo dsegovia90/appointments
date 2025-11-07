@@ -2,5 +2,7 @@ pub mod _entities;
 pub mod admin_settings;
 pub mod appointment_types;
 pub mod appointments;
+pub mod google_calendars;
+pub mod oauth_states;
 pub mod users;
 pub mod weekly_availabilities;

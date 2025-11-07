@@ -28,6 +28,7 @@ WORKDIR /app
 COPY Cargo.toml Cargo.lock ./
 COPY migration ./migration
 COPY src ./src
+COPY tpapi-fork ./tpapi-fork
 
 # Generate the cargo-chef recipe file
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
@@ -59,6 +60,7 @@ COPY --from=rust-deps /usr/local/cargo /usr/local/cargo
 COPY Cargo.toml Cargo.lock ./
 COPY migration ./migration
 COPY src ./src
+COPY tpapi-fork ./tpapi-fork
 
 # Build the application binary
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
@@ -123,4 +125,4 @@ ENV CARGO_PACKAGE_NAME=${CARGO_PACKAGE_NAME}
 
 # Use entrypoint with exec form CMD (prevents JSONArgsRecommended warning)
 ENTRYPOINT ["./docker-entrypoint.sh"]
-CMD ["start", "-e", "production"]
+CMD ["start", "-e", "production", "--server-and-worker"]

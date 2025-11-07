@@ -56,11 +56,7 @@ on_success = "back"  # so that we don't open the browser at each change
 # to false to have the cargo run output immediately displayed instead
 # of waiting for program's end.
 [jobs.run]
-command = [
-  "cargo",
-  "loco",
-  "start",
-]
+command = ["cargo", "loco", "start", "--server-and-worker"]
 need_stdout = true
 # allow_warnings = true
 background = false

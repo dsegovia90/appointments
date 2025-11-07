@@ -2,7 +2,7 @@
 import type { Weekday } from "~/utils/constants";
 import { weekdays } from "~/utils/constants";
 
-const NEW_HEIGHT = 60;
+const AVAILABILITY_WINDOW_HEIGHT = 60;
 interface Props {
   weekday: Weekday;
 }
@@ -14,8 +14,20 @@ const weekdayAvailability = computed(
 );
 const target = useTemplateRef("target");
 const { elementY, isOutside } = useMouseInElement(target);
-const newTop = computed(() => elementY.value - NEW_HEIGHT / 2);
-const newBottom = computed(() => elementY.value + NEW_HEIGHT / 2);
+const newTop = computed(() =>
+  windowCalculator({
+    min: 0,
+    max: 1440 - AVAILABILITY_WINDOW_HEIGHT,
+    value: elementY.value - AVAILABILITY_WINDOW_HEIGHT / 2,
+  }),
+);
+const newBottom = computed(() =>
+  windowCalculator({
+    min: AVAILABILITY_WINDOW_HEIGHT,
+    max: 1440,
+    value: elementY.value + AVAILABILITY_WINDOW_HEIGHT / 2,
+  }),
+);
 const clasherChecker = computed(() => {
   return !!weekdayAvailability.value?.find((item) => {
     return (
@@ -45,7 +57,7 @@ const handleCreate = () => {
       "
       :style="{
         top: `${newTop}px`,
-        height: `${NEW_HEIGHT}px`,
+        height: `${AVAILABILITY_WINDOW_HEIGHT}px`,
         left: '0',
       }"
       class="bg-neutral-200 flex-col absolute w-full flex justify-between items-center p-2 rounded"

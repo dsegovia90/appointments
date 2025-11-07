@@ -3,7 +3,7 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize, ts_rs::TS)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize, ts_rs :: TS)]
 #[sea_orm(table_name = "users")]
 pub struct Model {
     pub created_at: DateTimeWithTimeZone,
@@ -45,6 +45,10 @@ pub enum Relation {
     AppointmentTypes,
     #[sea_orm(has_many = "super::appointments::Entity")]
     Appointments,
+    #[sea_orm(has_many = "super::google_calendars::Entity")]
+    GoogleCalendars,
+    #[sea_orm(has_many = "super::oauth_states::Entity")]
+    OauthStates,
     #[sea_orm(has_many = "super::weekly_availabilities::Entity")]
     WeeklyAvailabilities,
 }
@@ -58,6 +62,18 @@ impl Related<super::appointment_types::Entity> for Entity {
 impl Related<super::appointments::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Appointments.def()
+    }
+}
+
+impl Related<super::google_calendars::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::GoogleCalendars.def()
+    }
+}
+
+impl Related<super::oauth_states::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::OauthStates.def()
     }
 }
 

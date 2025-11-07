@@ -1,6 +1,7 @@
 #![allow(clippy::missing_errors_doc)]
 
 pub mod app;
+pub mod common;
 pub mod controllers;
 pub mod extractors;
 pub mod initializers;

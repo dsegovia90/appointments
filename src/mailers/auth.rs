@@ -1,10 +1,9 @@
 // auth mailer
 #![allow(non_upper_case_globals)]
 
-use loco_rs::{environment::Environment, prelude::*};
-use serde_json::json;
-
 use crate::models::users;
+use loco_rs::{environment::Environment, mailer::MailerOpts, prelude::*};
+use serde_json::json;
 
 static welcome: Dir<'_> = include_dir!("src/mailers/auth/welcome");
 static forgot: Dir<'_> = include_dir!("src/mailers/auth/forgot");
@@ -12,7 +11,14 @@ static magic_link: Dir<'_> = include_dir!("src/mailers/auth/magic_link");
 
 #[allow(clippy::module_name_repetitions)]
 pub struct AuthMailer {}
-impl Mailer for AuthMailer {}
+impl Mailer for AuthMailer {
+    fn opts() -> MailerOpts {
+        MailerOpts {
+            from: dotenvy::var("DEFAULT_EMAIL_SENDER").unwrap(),
+            ..Default::default()
+        }
+    }
+}
 impl AuthMailer {
     fn host(ctx: &AppContext) -> String {
         match ctx.environment {

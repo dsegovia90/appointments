@@ -17,7 +17,7 @@ pub type Users = Entity;
 use crate::{
     models::{
         admin_settings::AdminSettings,
-        appointment_types, appointments,
+        appointment_types, appointments, google_calendars,
         users::users::Role,
         weekly_availabilities::{self, WeeklyAvailabilityDuration},
     },
@@ -343,6 +343,28 @@ impl Model {
         validator::Validate::validate(&props).map_err(ModelError::wrap)?;
         let appointments = appointments::Appointments::find_upcoming(db, self).await?;
 
+        let google_calendar_windows = match google_calendars::Model::get_free_busy(
+            db,
+            self,
+            chrono::Utc::now() + props.start_how_far_from_now,
+            chrono::Utc::now() + props.end_how_far_from_now,
+        )
+        .await
+        {
+            Ok(windows) => windows,
+            Err(err) => {
+                tracing::warn!("Error getting free/busy: {}", err.to_string());
+                Vec::new()
+            }
+        };
+
+        let mut my_vec: Vec<AvailabilityWindow> = Vec::new();
+        my_vec.extend(google_calendar_windows);
+        my_vec.extend(appointments.into_iter().map(|a| AvailabilityWindow {
+            start: a.start_time.to_utc(),
+            end: a.endtime.to_utc(),
+        }));
+
         let user_timezone: Tz = self.timezone.parse().map_err(ModelError::wrap)?;
         let weekly_availabilities: Vec<WeeklyAvailabilityDuration> =
             weekly_availabilities::Entity::find_by_user(db, self, vec![])
@@ -404,7 +426,7 @@ impl Model {
                             start: time_cursor.to_utc(),
                             end: (time_cursor + appointment_duration).to_utc(),
                         };
-                        if !appointments::Model::clash_check(&window, &appointments) {
+                        if !appointments::Model::clash_check(&window, &my_vec) {
                             windows.push(window);
                         }
                     }

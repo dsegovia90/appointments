@@ -2,10 +2,7 @@
 #![allow(clippy::unnecessary_struct_initialization)]
 #![allow(clippy::unused_async)]
 use crate::{
-    models::{
-        _entities::admin_settings::{Entity, Model},
-        users::users,
-    },
+    models::{admin_settings::AdminSettings, users::users},
     views::admin_settings::{AdminSettingsClientFacing, AdminSettingsParams},
 };
 use axum::{
@@ -14,14 +11,9 @@ use axum::{
 };
 use loco_rs::prelude::*;
 
-async fn load_item(ctx: &AppContext) -> Result<Model> {
-    let item = Entity::find().one(&ctx.db).await?;
-    item.ok_or_else(|| Error::NotFound)
-}
-
 #[debug_handler]
 pub async fn read(State(ctx): State<AppContext>) -> Result<Json<AdminSettingsClientFacing>> {
-    Ok(Json(load_item(&ctx).await?.into()))
+    Ok(Json(AdminSettings::load(&ctx.db).await?.into()))
 }
 
 #[debug_handler]
@@ -29,7 +21,7 @@ pub async fn update(
     State(ctx): State<AppContext>,
     Json(params): Json<AdminSettingsParams>,
 ) -> Result<Json<AdminSettingsClientFacing>> {
-    let item = load_item(&ctx).await?;
+    let item = AdminSettings::load(&ctx.db).await?;
     let mut item = item.into_active_model();
     params.update(&mut item);
     let item = item.update(&ctx.db).await?;

@@ -7,7 +7,7 @@ use crate::{
     mailers::appointments::AppointmentsMailer,
     models::{
         appointment_types::{self, AppointmentTypes},
-        appointments,
+        appointments, google_calendars,
         users::{self, Users},
     },
     views::client_facing::{AvailabilityWindow, BookDay, BookingParams},
@@ -109,6 +109,13 @@ pub async fn booking(
         },
     )
     .await?;
+
+    match google_calendars::Model::create_calendars_event(&ctx.db, &user, &appointment).await {
+        Ok(()) => (),
+        Err(err) => {
+            tracing::warn!("Failed to create google calendar event: {}", err);
+        }
+    }
 
     AppointmentsMailer::send_notification_to_booker(&ctx, &appointment).await?;
     AppointmentsMailer::send_notification_to_user(&ctx, &appointment).await?;

@@ -35,3 +35,21 @@ export const formatDateTime = (dateString: string) => {
     minute: "numeric",
   });
 };
+
+interface WindowCalculatorProps {
+  value: number;
+  min: number;
+  max: number;
+  step?: number;
+}
+
+export const windowCalculator = ({
+  value,
+  min,
+  max,
+  step = 5,
+}: WindowCalculatorProps) => {
+  return (
+    Math.ceil(Math.round(Math.min(max, Math.max(min, value))) / step) * step
+  );
+};

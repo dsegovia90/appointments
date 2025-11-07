@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { AvailabilityDay } from "~/bindings/AvailabilityDay";
 
+const TOP_MARGIN = 40;
+
 const topResizer = useTemplateRef("topResizer");
 const bottomResizer = useTemplateRef("bottomResizer");
 
@@ -18,18 +20,29 @@ interface Props {
 const props = defineProps<Props>();
 
 const grid = inject<HTMLDivElement>("grid");
-const x = useMouseInElement(grid);
+const { elementY } = useMouseInElement(grid);
 
-const computedTop = computed(() => {
-  if (resizingTop.value) return x.elementY.value;
+const computedTop = computed<number>((): number => {
+  if (resizingTop.value)
+    return windowCalculator({
+      value: elementY.value - TOP_MARGIN,
+      min: 0,
+      max: computedBottom.value - 10,
+    });
   if (waitingForTopUpdate.value) {
     return waitingForTopUpdate.value;
   }
   return props.availability.normalized.from;
 });
 
-const computedBottom = computed(() => {
-  if (resizingBottom.value) return x.elementY.value;
+const computedBottom = computed<number>((): number => {
+  if (resizingBottom.value) {
+    return windowCalculator({
+      value: elementY.value - TOP_MARGIN,
+      min: computedTop.value + 10,
+      max: 1440,
+    });
+  }
   if (waitingForBottomUpdate.value) {
     return waitingForBottomUpdate.value;
   }
@@ -55,7 +68,11 @@ const handleUpdate = async () => {
 watch(resizingTop, async (resizingTop) => {
   weeklyAvailabilityStore.isUpdating = resizingTop;
   if (!resizingTop) {
-    waitingForTopUpdate.value = x.elementY.value;
+    waitingForTopUpdate.value = windowCalculator({
+      value: elementY.value - TOP_MARGIN,
+      min: 0,
+      max: computedBottom.value - 10,
+    });
     await nextTick();
     handleUpdate();
   }
@@ -64,7 +81,11 @@ watch(resizingTop, async (resizingTop) => {
 watch(resizingBottom, async (resizingBottom) => {
   weeklyAvailabilityStore.isUpdating = resizingBottom;
   if (!resizingBottom) {
-    waitingForBottomUpdate.value = x.elementY.value;
+    waitingForBottomUpdate.value = windowCalculator({
+      value: elementY.value - TOP_MARGIN,
+      min: computedTop.value + 10,
+      max: 1440,
+    });
     await nextTick();
     handleUpdate();
   }
