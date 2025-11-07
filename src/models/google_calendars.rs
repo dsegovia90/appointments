@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 pub use super::_entities::google_calendars::{ActiveModel, Entity, Model};
 use crate::{
     controllers::api::integrations::google_calendar::OAuthCallbackQueryParams,
@@ -233,6 +235,24 @@ impl Model {
         }
 
         Ok(active_model.update(db).await?)
+    }
+
+    pub async fn revoke_and_delete_token<C: ConnectionTrait>(self, db: &C) -> Result<()> {
+        let mut query = HashMap::new();
+        query.insert("token", self.access_token.as_str());
+        let empty_hash: HashMap<&str, &str> = HashMap::new();
+
+        reqwest::Client::new()
+            .post("https://oauth2.googleapis.com/revoke")
+            .form(&empty_hash)
+            .query(&query)
+            .send()
+            .await
+            .map_err(Error::wrap)?;
+
+        self.into_active_model().delete(db).await?;
+
+        Ok(())
     }
 
     pub async fn get_free_busy<C: ConnectionTrait>(

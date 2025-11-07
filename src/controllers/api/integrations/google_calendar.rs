@@ -41,6 +41,20 @@ pub async fn oauth_callback(
 }
 
 #[debug_handler]
+pub async fn revoke_and_delete_token(
+    State(ctx): State<AppContext>,
+    user: users::Model,
+) -> Result<Redirect> {
+    // Revoke the access token and delete the token from the database
+    let google_calendar_config = GoogleCalendars::find_by_user(&ctx.db, &user).await?;
+    google_calendar_config
+        .revoke_and_delete_token(&ctx.db)
+        .await?;
+
+    Ok(Redirect::to("/"))
+}
+
+#[debug_handler]
 pub async fn get_calendars(
     State(ctx): State<AppContext>,
     user: users::Model,
@@ -120,6 +134,7 @@ pub async fn get_settings(
 pub fn routes() -> Routes {
     Routes::new()
         .prefix("api/google_calendar/")
+        .add("/", delete(revoke_and_delete_token))
         .add("/oauth_url", get(oauth_url))
         .add("/oauth_callback", get(oauth_callback))
         .add("/get_calendars", get(get_calendars))

@@ -7,9 +7,11 @@ import type { CalendarSettingsResponse } from "~/bindings/CalendarSettingsRespon
 import { useAPI } from "~/composables/useAPI";
 
 const UIcon = resolveComponent("UIcon");
-const { data: calendars, isFetching: isFetchingCalendars } = useAPI<
-  CalendarEntry[]
->("/api/google_calendar/get_calendars").json();
+const {
+  data: calendars,
+  isFetching: isFetchingCalendars,
+  execute: fetchCalendars,
+} = useAPI<CalendarEntry[]>("/api/google_calendar/get_calendars").json();
 const checkForCollision = ref<Set<string>>(new Set());
 const createEventOnAppointment = ref<Set<string>>(new Set());
 const toast = useToast();
@@ -18,6 +20,27 @@ const handleGoogleOAuthUrlClick = async () => {
   const response = await api<string>("/api/google_calendar/oauth_url");
 
   window.location.href = response;
+};
+
+const handleGoogleOAuthDelete = async () => {
+  await api("/api/google_calendar", {
+    method: "DELETE",
+  });
+
+  await fetchCalendars();
+
+  setCheckboxes(
+    {
+      calendars_for_collision_check: [],
+      calendars_for_event_handling: [],
+    },
+    false,
+  );
+
+  toast.add({
+    title: "Success",
+    description: "Google Calendar integration revoked successfully",
+  });
 };
 
 const setCheckboxes = (
@@ -100,14 +123,25 @@ const handleCalendarSettingUpdate = async (
 <template>
   <div>
     <h2>Google Calendar Integration</h2>
-    <UButton
-      size="xl"
-      class="bg-white rounded-sm cursor-pointer hover:bg-gray-200"
-      icon="logos:google-icon"
-      @click="handleGoogleOAuthUrlClick"
-    >
-      Sign in with Google
-    </UButton>
+    <div class="flex gap-8">
+      <UButton
+        size="xl"
+        class="bg-white rounded-sm cursor-pointer hover:bg-gray-200"
+        icon="logos:google-icon"
+        @click="handleGoogleOAuthUrlClick"
+      >
+        Sign in with Google
+      </UButton>
+      <UButton
+        v-if="calendars?.length > 0"
+        size="xl"
+        class="bg-white rounded-sm cursor-pointer hover:bg-gray-200"
+        icon="lucide:trash-2"
+        @click="handleGoogleOAuthDelete"
+      >
+        Revoke Google Calendar Integration
+      </UButton>
+    </div>
     <UTable
       :ui="{ tr: 'transition-opacity hover:opacity-80' }"
       :columns="columns"
