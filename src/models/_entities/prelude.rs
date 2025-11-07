@@ -3,5 +3,7 @@
 pub use super::admin_settings::Entity as AdminSettings;
 pub use super::appointment_types::Entity as AppointmentTypes;
 pub use super::appointments::Entity as Appointments;
+pub use super::google_calendars::Entity as GoogleCalendars;
+pub use super::oauth_states::Entity as OauthStates;
 pub use super::users::Entity as Users;
 pub use super::weekly_availabilities::Entity as WeeklyAvailabilities;

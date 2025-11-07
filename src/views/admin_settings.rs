@@ -1,4 +1,7 @@
-use crate::models::admin_settings::{ActiveModel, Model};
+use crate::models::{
+    _entities::admin_settings::GoogleCalendarSettings,
+    admin_settings::{ActiveModel, Model},
+};
 use loco_rs::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -6,7 +9,7 @@ use serde::{Deserialize, Serialize};
 #[ts(export)]
 pub struct AdminSettingsParams {
     pub allow_new_registrations: Option<bool>,
-    pub google_cloud_api_key: Option<String>,
+    pub google_calendar_settings: Option<GoogleCalendarSettings>,
 }
 
 impl AdminSettingsParams {
@@ -15,8 +18,8 @@ impl AdminSettingsParams {
             item.allow_new_registrations = Set(allow_new_registrations);
         }
 
-        if self.google_cloud_api_key.is_some() {
-            item.google_cloud_api_key = Set(self.google_cloud_api_key.clone());
+        if self.google_calendar_settings.is_some() {
+            item.google_calendar_settings = Set(self.google_calendar_settings.clone());
         }
     }
 }
@@ -28,7 +31,7 @@ pub struct AdminSettingsClientFacing {
     pub updated_at: DateTimeWithTimeZone,
     pub id: i32,
     pub allow_new_registrations: bool,
-    pub google_cloud_api_key: Option<String>,
+    pub google_calendar_settings: Option<GoogleCalendarSettings>,
 }
 
 impl From<Model> for AdminSettingsClientFacing {
@@ -38,9 +41,14 @@ impl From<Model> for AdminSettingsClientFacing {
             updated_at: item.updated_at,
             allow_new_registrations: item.allow_new_registrations,
             id: item.id,
-            google_cloud_api_key: item
-                .google_cloud_api_key
-                .map(|secret| "*".repeat(secret.len())),
+            google_calendar_settings: item.google_calendar_settings.map(|settings| {
+                GoogleCalendarSettings {
+                    google_calendar_api_key: "*".repeat(settings.google_calendar_api_key.len()),
+                    google_oauth_client_id: settings.google_oauth_client_id,
+                    google_oauth_secret: "*".repeat(settings.google_oauth_secret.len()),
+                    google_oauth_redirect_uri_base: settings.google_oauth_redirect_uri_base,
+                }
+            }),
         }
     }
 }

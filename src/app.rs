@@ -54,11 +54,12 @@ impl Hooks for App {
     fn routes(ctx: &AppContext) -> AppRoutes {
         AppRoutes::with_default_routes() // controller routes below
             .add_route(controllers::api::admin_settings::routes(ctx))
-            .add_route(controllers::api::appointments::routes())
             .add_route(controllers::api::appointment_types::routes())
-            .add_route(controllers::api::client_facing::routes())
-            .add_route(controllers::api::weekly_availabilities::routes())
+            .add_route(controllers::api::appointments::routes())
             .add_route(controllers::api::auth::routes())
+            .add_route(controllers::api::client_facing::routes())
+            .add_route(controllers::api::integrations::google_calendar::routes())
+            .add_route(controllers::api::weekly_availabilities::routes())
     }
 
     async fn connect_workers(ctx: &AppContext, queue: &Queue) -> Result<()> {

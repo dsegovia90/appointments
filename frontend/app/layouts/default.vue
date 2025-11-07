@@ -21,6 +21,11 @@ const items = computed<NavigationMenuItem[]>(() => {
       icon: "lucide:calendar-clock",
       to: "/dashboard/weekly-availability",
     },
+    {
+      label: "Integrations",
+      icon: "lucide:link",
+      to: "/dashboard/integrations",
+    },
   ];
 
   if (userStore.user?.role === "Admin") {
