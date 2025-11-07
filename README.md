@@ -2,6 +2,8 @@
 
 [demo](https://appointments-demo.dsegovia.io/)
 
+[Setup Demo](https://github.com/user-attachments/assets/6d4285e9-a272-433f-b6b1-7b401834c69d)
+
 First things first, we need a better name. Feel free to suggest one!
 
 Second, this is not ready for production use. If you're adventurous, you can try it out. Please note that this application is still in development and may contain bugs or unexpected behavior. If you encounter any issues, please report them on the GitHub repository.
