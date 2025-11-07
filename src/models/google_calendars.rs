@@ -4,6 +4,7 @@ use crate::{
     models::{
         _entities::{admin_settings::GoogleCalendarSettings, google_calendars::Column},
         admin_settings::AdminSettings,
+        appointments,
         oauth_states::{self, OAuthStates},
         users::{self, Users},
     },
@@ -12,7 +13,11 @@ use crate::{
         google_calendars::{CalendarSettingParams, CalendarSettingType},
     },
 };
-use google_calendar::types::FreeBusyRequestItem;
+use futures::future::try_join_all;
+use google_calendar::types::{
+    ConferenceData, ConferenceSolutionKey, CreateConferenceRequest, Event, EventAttendee,
+    EventDateTime, FreeBusyRequestItem, SendUpdates,
+};
 use loco_rs::prelude::*;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -162,9 +167,6 @@ impl Model {
 
         match response {
             OAuthTokenResponse::Ok(auth_success_response) => {
-                // TODO: Store the access_token and refresh_token in your database
-                // associated with the user identified by params.state
-                //
                 let oauth_state =
                     OAuthStates::find_by_uuid_and_destroy(&ctx.db, &query_params.state)
                         .await
@@ -282,6 +284,104 @@ impl Model {
             })
             .collect();
         Ok(availability_windows)
+    }
+
+    pub async fn create_calendars_event<C: ConnectionTrait>(
+        db: &C,
+        user: &users::Model,
+        appointment: &appointments::Model,
+    ) -> Result<()> {
+        let google_calendar_settings = AdminSettings::get_google_calendar_settings(db).await?;
+        let google_calendar_config = GoogleCalendars::find_by_user(db, user).await?;
+        let redirect_url = OAuthUrl::redirect_uri(&google_calendar_settings)?;
+
+        let client = google_calendar::Client::new(
+            google_calendar_settings.google_oauth_client_id,
+            google_calendar_settings.google_oauth_secret,
+            redirect_url,
+            google_calendar_config.access_token,
+            google_calendar_config.refresh_token,
+        );
+
+        let _access_token = client.refresh_access_token().await.map_err(Error::wrap)?;
+        let body = appointment.body(db).await?;
+
+        let event = Event {
+            summary: body,
+            description: String::new(),
+            attendees: vec![
+                EventAttendee {
+                    email: user.email.clone(),
+                    response_status: "accepted".to_string(),
+                    additional_guests: 0,
+                    comment: String::new(),
+                    display_name: String::new(),
+                    id: String::new(),
+                    optional: false,
+                    organizer: true,
+                    resource: false,
+                    self_: false,
+                },
+                EventAttendee {
+                    email: appointment.booker_email.clone(),
+                    response_status: "accepted".to_string(),
+                    additional_guests: 0,
+                    comment: String::new(),
+                    display_name: String::new(),
+                    id: String::new(),
+                    optional: false,
+                    organizer: false,
+                    resource: false,
+                    self_: false,
+                },
+            ],
+            start: Some(EventDateTime {
+                date: None,
+                time_zone: String::new(),
+                date_time: Some(appointment.start_time.to_utc()),
+            }),
+            end: Some(EventDateTime {
+                date: None,
+                time_zone: String::new(),
+                date_time: Some(appointment.endtime.to_utc()),
+            }),
+            conference_data: Some(ConferenceData {
+                conference_solution: None,
+                conference_id: Uuid::new_v4().into(),
+                create_request: Some(CreateConferenceRequest {
+                    conference_solution_key: Some(ConferenceSolutionKey {
+                        type_: "hangoutsMeet".to_string(),
+                    }),
+                    request_id: Uuid::new_v4().into(),
+                    status: None,
+                }),
+                entry_points: vec![],
+                notes: String::new(),
+                parameters: None,
+                signature: String::new(),
+            }),
+            ..Default::default()
+        };
+
+        let futures = google_calendar_config
+            .calendars_for_event_handling
+            .0
+            .into_iter()
+            .map(|item| {
+                let client = client.clone();
+                let event = event.clone();
+                async move {
+                    client
+                        .events()
+                        .insert(&item, 1, 0, false, SendUpdates::All, false, &event)
+                        .await
+                }
+            })
+            .collect::<Vec<_>>();
+
+        let response = try_join_all(futures).await.map_err(Error::wrap)?;
+
+        Ok(())
     }
 }
 

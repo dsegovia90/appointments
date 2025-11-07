@@ -1,4 +1,8 @@
-use crate::{models::users::CurrentAvailabilityProps, our_chrono, traits::GenericWindowComparison};
+use crate::{
+    models::{appointment_types::AppointmentTypes, users::CurrentAvailabilityProps},
+    our_chrono,
+    traits::GenericWindowComparison,
+};
 
 pub use super::_entities::appointments::{ActiveModel, Entity, Model};
 use super::{_entities::appointments::Column, appointment_types, users};
@@ -70,6 +74,15 @@ impl Model {
         }
 
         Ok(())
+    }
+
+    pub async fn body<C: ConnectionTrait>(&self, db: &C) -> Result<String> {
+        let appointment_type = AppointmentTypes::find_by_id(db, self.appointment_type_id).await?;
+
+        Ok(format!(
+            "{} with {}",
+            appointment_type.display_name, self.booker_name
+        ))
     }
 }
 

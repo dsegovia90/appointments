@@ -143,6 +143,7 @@ dependencies = [
  "chrono-tz 0.10.4",
  "dotenvy",
  "fluent-templates",
+ "futures",
  "google-calendar",
  "include_dir",
  "insta",

@@ -28,6 +28,7 @@ chrono-tz = { version = "0.10.0", features = ["serde"] }
 dotenvy = "0.15.7"
 # view engine i18n
 fluent-templates = { version = "0.8.0", features = ["tera"] }
+futures = "0.3.31"
 google-calendar = { path = "./tpapi-fork" }
 include_dir = { version = "0.7" }
 itertools = "0.14.0"
