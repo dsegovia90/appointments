@@ -379,7 +379,7 @@ impl Model {
             })
             .collect::<Vec<_>>();
 
-        let response = try_join_all(futures).await.map_err(Error::wrap)?;
+        try_join_all(futures).await.map_err(Error::wrap)?;
 
         Ok(())
     }
