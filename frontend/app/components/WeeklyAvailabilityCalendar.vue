@@ -6,6 +6,7 @@ provide("grid", grid);
 </script>
 
 <template>
+  <h2 class="text-2xl mx-auto">Weekly Availability Calendar</h2>
   <div ref="grid" class="grid grid-cols-7 mt-10 pl-18 min-w-4xl relative">
     <div
       v-for="day in weekdays"

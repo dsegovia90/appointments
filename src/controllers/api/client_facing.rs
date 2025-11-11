@@ -7,7 +7,7 @@ use crate::{
     mailers::appointments::AppointmentsMailer,
     models::{
         appointment_types::{self, AppointmentTypes},
-        appointments, google_calendars,
+        appointments, google_calendars, user_settings,
         users::{self, Users},
     },
     views::client_facing::{AvailabilityWindow, BookDay, BookingParams},
@@ -40,13 +40,18 @@ async fn availabilities_by_day(
     let appointment_type = AppointmentTypes::find_by_id(&ctx.db, appointment_type_id).await?;
 
     let user = Users::find_by_id(&ctx.db, appointment_type.user_id).await?;
+    let user_settings = user_settings::Model::get_or_create(&ctx.db, &user).await?;
     let availabilities = user
         .get_current_availabilities_by_appointment_type(
             &ctx.db,
             users::CurrentAvailabilityProps {
                 appointment_type: &appointment_type,
-                start_how_far_from_now: TimeDelta::zero(),
-                end_how_far_from_now: TimeDelta::days(14),
+                start_how_far_from_now: TimeDelta::minutes(
+                    user_settings.start_how_far_from_now_in_minutes.into(),
+                ),
+                end_how_far_from_now: TimeDelta::minutes(
+                    user_settings.end_how_far_from_now_in_minutes.into(),
+                ),
             },
         )
         .await?;

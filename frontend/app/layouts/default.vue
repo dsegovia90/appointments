@@ -17,9 +17,9 @@ const items = computed<NavigationMenuItem[]>(() => {
       to: "/dashboard/appointment-types",
     },
     {
-      label: "Weekly Availability",
+      label: "Availability",
       icon: "lucide:calendar-clock",
-      to: "/dashboard/weekly-availability",
+      to: "/dashboard/availability",
     },
     {
       label: "Integrations",
