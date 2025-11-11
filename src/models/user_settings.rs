@@ -32,9 +32,10 @@ impl Model {
 }
 
 fn validate_user_settings(settings: &Validator) -> Result<(), ValidationError> {
-    if settings.start_how_far_from_now_in_minutes > settings.end_how_far_from_now_in_minutes {
-        Err(ValidationError::new("start_less_than_end")
-            .with_message("Can't be greater than end_how_far_from_now_in_minutes".into()))
+    if settings.start_how_far_from_now_in_minutes >= settings.end_how_far_from_now_in_minutes {
+        Err(ValidationError::new("start_less_than_end").with_message(
+            "Can't be greater than or equal to end_how_far_from_now_in_minutes".into(),
+        ))
     } else {
         Ok(())
     }
@@ -81,8 +82,8 @@ impl ActiveModel {
         db: &C,
         props: &UserSettingsProps,
     ) -> Result<Model, DbErr> {
-        self.start_how_far_from_now_in_minutes = Set(props.start_how_far_from_now_in_minutes);
-        self.end_how_far_from_now_in_minutes = Set(props.end_how_far_from_now_in_minutes);
+        self.start_how_far_from_now_in_minutes = Set(props.start_how_far_from_now.as_minutes());
+        self.end_how_far_from_now_in_minutes = Set(props.end_how_far_from_now.as_minutes());
         self.update(db).await
     }
 }
