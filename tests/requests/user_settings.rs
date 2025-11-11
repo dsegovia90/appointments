@@ -14,4 +14,3 @@ async fn can_get_user_settings() {
     })
     .await;
 }
-
