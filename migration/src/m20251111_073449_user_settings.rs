@@ -1,3 +1,4 @@
+use loco_rs::schema::table_auto_tz;
 use sea_orm_migration::prelude::*;
 
 #[derive(DeriveMigrationName)]
@@ -22,8 +23,7 @@ enum Users {
 impl MigrationTrait for Migration {
     async fn up(&self, m: &SchemaManager) -> Result<(), DbErr> {
         m.create_table(
-            Table::create()
-                .table(UserSettings::Table)
+            table_auto_tz(UserSettings::Table)
                 .if_not_exists()
                 .col(
                     ColumnDef::new(UserSettings::Id)
