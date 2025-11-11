@@ -6,6 +6,8 @@ import type { UserSettings } from "~/bindings/UserSettings";
 
 const toast = useToast();
 const now = useNow();
+const form = useTemplateRef("form");
+
 const from = computed(() => {
   if (!state.value.start_how_far_from_now) return null;
   const from = new Date(now.value);
@@ -74,13 +76,13 @@ async function onSubmit(event: FormSubmitEvent<UserSettingsProps>) {
     await api("/api/user_settings", { method: "POST", body: event.data });
     toast.add({
       title: "Success",
-      description: "The form has been submitted.",
+      description: "Availability window saved.",
       color: "success",
     });
   } catch (error) {
     toast.add({
       title: "Error",
-      description: "Failed to submit the form.",
+      description: "Failed to submit availability window.",
       color: "error",
     });
     throw error;
@@ -131,6 +133,7 @@ watch(
   </div>
   <UForm
     v-else
+    ref="form"
     :schema="schema"
     :state="state"
     class="mt-4 space-y-4"
@@ -140,18 +143,18 @@ watch(
       <DaysHoursMinutesFormField
         v-model="state.start_how_far_from_now"
         :error-highlight="!!globalError"
-        label="Start Time"
+        label="Start Time from Today"
         class="rounded-b-none md:rounded-b-md md:rounded-r-none"
       />
       <DaysHoursMinutesFormField
         v-model="state.end_how_far_from_now"
         :error-highlight="!!globalError"
-        label="End Time"
+        label="End Time from Today"
         class="rounded-t-none md:rounded-t-md md:rounded-l-none"
       />
     </div>
 
     <p v-if="globalError" class="text-error">{{ globalError }}</p>
-    <UButton size="xl" type="submit"> Submit </UButton>
+    <UButton size="xl" type="submit"> Save </UButton>
   </UForm>
 </template>

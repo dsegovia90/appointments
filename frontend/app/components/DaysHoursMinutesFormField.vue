@@ -6,7 +6,6 @@ interface Props {
   label: string;
   errorHighlight: boolean;
 }
-
 defineProps<Props>();
 
 const model = defineModel<DaysHoursMinutes>({
@@ -46,7 +45,7 @@ const schema: z.ZodType<DaysHoursMinutes> = z.object({
         :label="`${model.days} Day${model.days === 1 ? '' : 's'}`"
         :error="errorHighlight"
       >
-        <UInputNumber v-model="model.days" :max="365" />
+        <UInputNumber v-model="model.days" :min="0" :max="365" />
       </UFormField>
       <UFormField
         name="hours"
