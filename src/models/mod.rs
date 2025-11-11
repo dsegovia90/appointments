@@ -6,3 +6,4 @@ pub mod google_calendars;
 pub mod oauth_states;
 pub mod users;
 pub mod weekly_availabilities;
+pub mod user_settings;
