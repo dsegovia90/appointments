@@ -7,11 +7,11 @@ provide("grid", grid);
 
 <template>
   <h2 class="text-2xl mx-auto">Weekly Availability Calendar</h2>
-  <div ref="grid" class="grid grid-cols-7 mt-10 pl-18 min-w-4xl relative">
+  <div ref="grid" class="grid grid-cols-7 pl-18 min-w-4xl relative">
     <div
       v-for="day in weekdays"
       :key="day.key"
-      class="sticky top-(--ui-header-height) bg-default z-20"
+      class="sticky -top-6 bg-default z-20"
     >
       <div class="p-2 text-center truncate">{{ day.label }}</div>
     </div>
