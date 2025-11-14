@@ -1,5 +1,9 @@
 use crate::{
-    models::{appointment_types::AppointmentTypes, users::CurrentAvailabilityProps},
+    controllers::api::appointments::AppointmentsQueryParams,
+    models::{
+        _entities::appointments::Status, appointment_types::AppointmentTypes,
+        users::CurrentAvailabilityProps,
+    },
     our_chrono,
     traits::GenericWindowComparison,
 };
@@ -110,7 +114,7 @@ impl ActiveModel {
             booker_email: ActiveValue::set(props.booker_email),
             start_time: ActiveValue::set(props.start_time.into()),
             endtime: ActiveValue::set(props.endtime.into()),
-            status: ActiveValue::set("Booked".to_string()),
+            status: ActiveValue::set(Status::Booked),
             user_id: ActiveValue::set(props.user.id),
             appointment_type_id: ActiveValue::set(props.appointment_type.id),
             ..Default::default()
@@ -132,6 +136,35 @@ impl Entity {
             .filter(Column::StartTime.gt(our_chrono::utc_now()))
             .all(db)
             .await?;
+
+        Ok(booked)
+    }
+
+    pub async fn find_by_user_with_filters<C>(
+        db: &C,
+        owner: &users::Model,
+        filters: AppointmentsQueryParams,
+    ) -> ModelResult<Vec<Model>>
+    where
+        C: ConnectionTrait,
+    {
+        let mut appointments_query = Self::find()
+            .order_by_desc(Column::StartTime)
+            .filter(Column::UserId.eq(owner.id));
+        if let Some(appointment_type_id) = filters.appointment_type {
+            appointments_query =
+                appointments_query.filter(Column::AppointmentTypeId.eq(appointment_type_id));
+        }
+        if let Some(status) = filters.status {
+            appointments_query = appointments_query.filter(Column::Status.eq(status));
+        }
+        if let Some(start_time) = filters.from_date {
+            appointments_query = appointments_query.filter(Column::StartTime.gt(start_time));
+        }
+        if let Some(end_time) = filters.to_date {
+            appointments_query = appointments_query.filter(Column::StartTime.lt(end_time));
+        }
+        let booked = appointments_query.all(db).await?;
 
         Ok(booked)
     }

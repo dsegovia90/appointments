@@ -43,63 +43,61 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex-1">
-    <UDashboardPanel id="home">
-      <template #header>
-        <UDashboardNavbar title="Appointments">
-          <template #leading>
-            <UDashboardSidebarCollapse />
-          </template>
-        </UDashboardNavbar>
-      </template>
+  <UDashboardPanel id="home">
+    <template #header>
+      <UDashboardNavbar title="Appointments">
+        <template #leading>
+          <UDashboardSidebarCollapse />
+        </template>
+      </UDashboardNavbar>
+    </template>
 
-      <template #body>
-        <div class="ml-auto">
-          <UButton
-            icon="i-lucide-refresh-cw"
-            color="neutral"
-            variant="outline"
-            :loading="loading"
-            :disabled="loading"
-            @click="fetchAppointments"
-          >
-            Refresh
-          </UButton>
-        </div>
-        <UTable :columns="columns" :data="appointments">
-          <template #created_at-cell="{ row }">
-            <span class="text-sm">
-              {{ formatDate(row.original.created_at) }}
-            </span>
-          </template>
-          <template #start_time-cell="{ row }">
-            <span class="text-sm">
-              {{ formatDateTime(row.original.start_time) }}
-            </span>
-          </template>
-          <template #appointment_type-cell="{ row }">
-            <span class="text-sm">
-              {{
-                appointmentTypes.appointmentTypes.get(
-                  row.original.appointment_type_id,
-                )?.display_name || "Unknown"
-              }}
-            </span>
-          </template>
-          <template #duration-cell="{ row }">
-            <span class="text-sm">
-              {{
-                parseAbsoluteToLocal(row.original.endtime).compare(
-                  parseAbsoluteToLocal(row.original.start_time),
-                ) /
-                60 /
-                1000
-              }}
-              mins
-            </span>
-          </template>
-        </UTable>
-      </template>
-    </UDashboardPanel>
-  </div>
+    <template #body>
+      <div class="ml-auto">
+        <UButton
+          icon="i-lucide-refresh-cw"
+          color="neutral"
+          variant="outline"
+          :loading="loading"
+          :disabled="loading"
+          @click="fetchAppointments"
+        >
+          Refresh
+        </UButton>
+      </div>
+      <UTable :columns="columns" :data="appointments">
+        <template #created_at-cell="{ row }">
+          <span class="text-sm">
+            {{ formatDate(row.original.created_at) }}
+          </span>
+        </template>
+        <template #start_time-cell="{ row }">
+          <span class="text-sm">
+            {{ formatDateTime(row.original.start_time) }}
+          </span>
+        </template>
+        <template #appointment_type-cell="{ row }">
+          <span class="text-sm">
+            {{
+              appointmentTypes.appointmentTypes.get(
+                row.original.appointment_type_id,
+              )?.display_name || "Unknown"
+            }}
+          </span>
+        </template>
+        <template #duration-cell="{ row }">
+          <span class="text-sm">
+            {{
+              parseAbsoluteToLocal(row.original.endtime).compare(
+                parseAbsoluteToLocal(row.original.start_time),
+              ) /
+              60 /
+              1000
+            }}
+            mins
+          </span>
+        </template>
+      </UTable>
+    </template>
+  </UDashboardPanel>
 </template>

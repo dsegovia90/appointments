@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import type { AvailabilityDay } from "~/bindings/AvailabilityDay";
 
-const TOP_MARGIN = 40;
-
 const topResizer = useTemplateRef("topResizer");
 const bottomResizer = useTemplateRef("bottomResizer");
 
@@ -16,16 +14,15 @@ const weeklyAvailabilityStore = useWeeklyAvailabilityStore();
 interface Props {
   availability: AvailabilityDay;
   weekday: number;
+  targetRef: HTMLDivElement | null;
 }
 const props = defineProps<Props>();
 
-const grid = inject<HTMLDivElement>("grid");
-const { elementY } = useMouseInElement(grid);
-
+const { elementY } = useMouseInElement(props.targetRef);
 const computedTop = computed<number>((): number => {
   if (resizingTop.value)
     return windowCalculator({
-      value: elementY.value - TOP_MARGIN,
+      value: elementY.value,
       min: 0,
       max: computedBottom.value - 10,
     });
@@ -38,7 +35,7 @@ const computedTop = computed<number>((): number => {
 const computedBottom = computed<number>((): number => {
   if (resizingBottom.value) {
     return windowCalculator({
-      value: elementY.value - TOP_MARGIN,
+      value: elementY.value,
       min: computedTop.value + 10,
       max: 1440,
     });
@@ -69,7 +66,7 @@ watch(resizingTop, async (resizingTop) => {
   weeklyAvailabilityStore.isUpdating = resizingTop;
   if (!resizingTop) {
     waitingForTopUpdate.value = windowCalculator({
-      value: elementY.value - TOP_MARGIN,
+      value: elementY.value,
       min: 0,
       max: computedBottom.value - 10,
     });
@@ -82,7 +79,7 @@ watch(resizingBottom, async (resizingBottom) => {
   weeklyAvailabilityStore.isUpdating = resizingBottom;
   if (!resizingBottom) {
     waitingForBottomUpdate.value = windowCalculator({
-      value: elementY.value - TOP_MARGIN,
+      value: elementY.value,
       min: computedTop.value + 10,
       max: 1440,
     });
