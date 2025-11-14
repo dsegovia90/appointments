@@ -13,7 +13,7 @@ use super::{_entities::appointments::Column, appointment_types, users};
 use chrono::Utc;
 use chrono_tz::Tz;
 use loco_rs::prelude::*;
-use sea_orm::{entity::prelude::*, QueryOrder};
+use sea_orm::{entity::prelude::*, QueryOrder, QuerySelect};
 
 pub type Appointments = Entity;
 
@@ -144,7 +144,7 @@ impl Entity {
         db: &C,
         owner: &users::Model,
         filters: AppointmentsQueryParams,
-    ) -> ModelResult<Vec<Model>>
+    ) -> ModelResult<(Vec<Model>, u64)>
     where
         C: ConnectionTrait,
     {
@@ -164,8 +164,14 @@ impl Entity {
         if let Some(end_time) = filters.to_date {
             appointments_query = appointments_query.filter(Column::StartTime.lt(end_time));
         }
-        let booked = appointments_query.all(db).await?;
 
-        Ok(booked)
+        let count = appointments_query.clone().count(db).await?;
+        let booked = appointments_query
+            .offset(filters.page * filters.limit)
+            .limit(filters.limit)
+            .all(db)
+            .await?;
+
+        Ok((booked, count))
     }
 }

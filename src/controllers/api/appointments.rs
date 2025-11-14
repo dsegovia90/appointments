@@ -8,16 +8,30 @@ use crate::models::{
     users::users,
 };
 use loco_rs::prelude::*;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize)]
+const fn default_limit() -> u64 {
+    10
+}
+
+#[derive(Debug, Deserialize, ts_rs::TS)]
+#[ts(export)]
 pub struct AppointmentsQueryParams {
-    pub page: Option<u32>,
-    pub limit: Option<u32>,
+    #[serde(default)]
+    pub page: u64,
+    #[serde(default = "default_limit")]
+    pub limit: u64,
     pub from_date: Option<DateTimeUtc>,
     pub to_date: Option<DateTimeUtc>,
     pub status: Option<Status>,
     pub appointment_type: Option<i32>,
+}
+
+#[derive(Debug, Serialize, ts_rs::TS)]
+#[ts(export)]
+pub struct AppointmentsResponse {
+    pub appointments: Vec<appointments::Model>,
+    pub count: u64,
 }
 
 #[debug_handler]
@@ -25,10 +39,13 @@ pub async fn read(
     State(ctx): State<AppContext>,
     user: users::Model,
     Query(query): Query<AppointmentsQueryParams>,
-) -> Result<Json<Vec<appointments::Model>>> {
-    Ok(Json(
-        Appointments::find_by_user_with_filters(&ctx.db, &user, query).await?,
-    ))
+) -> Result<Json<AppointmentsResponse>> {
+    let (appointments, count) =
+        Appointments::find_by_user_with_filters(&ctx.db, &user, query).await?;
+    Ok(Json(AppointmentsResponse {
+        appointments,
+        count,
+    }))
 }
 
 pub fn routes() -> Routes {

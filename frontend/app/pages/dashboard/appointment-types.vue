@@ -199,7 +199,7 @@ onMounted(() => {
 
         <template #duration_in_minutes-cell="{ row }">
           <UBadge color="neutral" variant="subtle">
-            <UIcon name="i-lucide-clock" class="w-3 h-3 mr-1" />
+            <UIcon name="lucide:clock" class="w-3 h-3 mr-1" />
             {{ formatDuration(row.original.duration_in_minutes) }}
           </UBadge>
         </template>
