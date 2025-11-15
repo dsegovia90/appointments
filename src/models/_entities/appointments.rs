@@ -17,9 +17,21 @@ pub struct Model {
     pub booker_email: String,
     pub start_time: DateTimeWithTimeZone,
     pub endtime: DateTimeWithTimeZone,
-    pub status: String,
+    pub status: Status,
     pub user_id: i32,
     pub appointment_type_id: i32,
+}
+
+#[derive(
+    Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize, ts_rs::TS,
+)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+#[ts(repr(enum = name))]
+pub enum Status {
+    #[sea_orm(string_value = "Booked")]
+    Booked,
+    #[sea_orm(string_value = "Cancelled")]
+    Cancelled,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

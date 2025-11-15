@@ -41,7 +41,7 @@ const schema: z.ZodType<DaysHoursMinutes> = z.object({
     >
       <UFormField
         name="days"
-        :ui="{ label: 'text-lg lg:text-2xl' }"
+        :ui="{ label: 'text-lg xl:text-2xl' }"
         :label="`${model.days} Day${model.days === 1 ? '' : 's'}`"
         :error="errorHighlight"
       >
@@ -49,7 +49,7 @@ const schema: z.ZodType<DaysHoursMinutes> = z.object({
       </UFormField>
       <UFormField
         name="hours"
-        :ui="{ label: 'text-lg lg:text-2xl' }"
+        :ui="{ label: 'text-lg xl:text-2xl' }"
         :label="`${model.hours} Hour${model.hours === 1 ? '' : 's'}`"
         :error="errorHighlight"
       >
@@ -57,7 +57,7 @@ const schema: z.ZodType<DaysHoursMinutes> = z.object({
       </UFormField>
       <UFormField
         name="minutes"
-        :ui="{ label: 'text-lg lg:text-2xl' }"
+        :ui="{ label: 'text-lg xl:text-2xl' }"
         :label="`${model.minutes} Minute${model.minutes === 1 ? '' : 's'}`"
         :error="errorHighlight"
       >

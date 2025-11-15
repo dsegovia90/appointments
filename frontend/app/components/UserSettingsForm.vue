@@ -6,7 +6,6 @@ import type { UserSettings } from "~/bindings/UserSettings";
 
 const toast = useToast();
 const now = useNow();
-const form = useTemplateRef("form");
 
 const from = computed(() => {
   if (!state.value.start_how_far_from_now) return null;

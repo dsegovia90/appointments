@@ -1,36 +1,71 @@
 <script setup lang="ts">
 import type { Appointment } from "~/bindings/Appointment";
-import type { TableColumn } from "@nuxt/ui";
-import { parseAbsoluteToLocal } from "@internationalized/date";
+import type { AppointmentsResponse } from "~/bindings/AppointmentsResponse";
+import { useRouteQuery } from "@vueuse/router";
+import type { DateRange } from "reka-ui";
+import {
+  type CalendarDate,
+  getLocalTimeZone,
+  today,
+  parseDate,
+} from "@internationalized/date";
+import type { Status } from "~/bindings/Status";
 
-const appointmentTypes = useAppointmentTypeStore();
 const loading = ref(true);
 const toast = useToast();
 
-const columns: TableColumn<Appointment>[] = [
-  { accessorKey: "created_at", header: "Created" },
-  { accessorKey: "booker_name", header: "Name" },
-  { accessorKey: "booker_phone", header: "Phone" },
-  { accessorKey: "booker_timezone", header: "Timezone" },
-  { accessorKey: "booker_email", header: "Email" },
-  { accessorKey: "start_time", header: "Start Time" },
-  { id: "appointment_type", header: "Type" },
-  { accessorKey: "duration", header: "Duration" },
-  { accessorKey: "status", header: "Status" },
-  { id: "actions", header: "Actions" },
-];
+const page = useRouteQuery("page", "0", { transform: Number });
+const limit = useRouteQuery("limit", "10", { transform: Number });
+const from_date = useRouteQuery<string | undefined, CalendarDate | undefined>(
+  "from_date",
+  undefined,
+  {
+    transform: {
+      get: (val) => (val ? parseDate(val) : undefined),
+      set: (val) => (val ? val.toString() : undefined),
+    },
+  },
+);
+const to_date = useRouteQuery<string | undefined, CalendarDate | undefined>(
+  "to_date",
+  undefined,
+  {
+    transform: {
+      get: (val) => (val ? parseDate(val) : undefined),
+      set: (val) => (val ? val.toString() : undefined),
+    },
+  },
+);
+const status = useRouteQuery<Status>("status");
+const appointment_type = useRouteQuery("appointment_type", null, {
+  transform: Number,
+});
 
 const appointments = ref<Appointment[]>([]);
+const count = ref(0n);
 
 const fetchAppointments = async () => {
-  loading.value = true;
-  appointments.value = await api<Appointment[]>("/api/appointments");
-  loading.value = false;
-};
-
-onMounted(async () => {
   try {
-    await fetchAppointments();
+    loading.value = true;
+    const urlSearchParams = new URLSearchParams({
+      page: page.value.toString(),
+      limit: limit.value.toString(),
+    });
+    if (from_date.value)
+      urlSearchParams.set("from_date", from_date.value.toString());
+    if (to_date.value) urlSearchParams.set("to_date", to_date.value.toString());
+    if (status.value) urlSearchParams.set("status", status.value);
+    if (appointment_type.value)
+      urlSearchParams.set(
+        "appointment_type",
+        appointment_type.value.toString(),
+      );
+    const response = await api<AppointmentsResponse>("/api/appointments", {
+      urlSearchParams,
+    });
+    appointments.value = response.appointments;
+    count.value = response.count;
+    loading.value = false;
   } catch (error) {
     toast.add({
       title: "Error",
@@ -39,67 +74,71 @@ onMounted(async () => {
     });
     console.error(error);
   }
+};
+
+const dateRange = computed<DateRange>(() => ({
+  start: from_date.value,
+  end: to_date.value,
+}));
+
+onMounted(async () => {
+  from_date.value = today(getLocalTimeZone());
+  await fetchAppointments();
+});
+
+watch([from_date, to_date, limit, status, appointment_type], async () => {
+  page.value = 0;
+  await fetchAppointments();
+});
+watch(page, async () => {
+  await fetchAppointments();
 });
 </script>
 
 <template>
-  <div class="flex-1">
-    <UDashboardPanel id="home">
-      <template #header>
-        <UDashboardNavbar title="Appointments">
-          <template #leading>
-            <UDashboardSidebarCollapse />
-          </template>
-        </UDashboardNavbar>
-      </template>
+  <UDashboardPanel id="home">
+    <template #header>
+      <UDashboardNavbar title="Appointments">
+        <template #leading>
+          <UDashboardSidebarCollapse />
+        </template>
+      </UDashboardNavbar>
+    </template>
 
-      <template #body>
-        <div class="ml-auto">
-          <UButton
-            icon="i-lucide-refresh-cw"
-            color="neutral"
-            variant="outline"
-            :loading="loading"
-            :disabled="loading"
-            @click="fetchAppointments"
-          >
-            Refresh
-          </UButton>
-        </div>
-        <UTable :columns="columns" :data="appointments">
-          <template #created_at-cell="{ row }">
-            <span class="text-sm">
-              {{ formatDate(row.original.created_at) }}
-            </span>
-          </template>
-          <template #start_time-cell="{ row }">
-            <span class="text-sm">
-              {{ formatDateTime(row.original.start_time) }}
-            </span>
-          </template>
-          <template #appointment_type-cell="{ row }">
-            <span class="text-sm">
-              {{
-                appointmentTypes.appointmentTypes.get(
-                  row.original.appointment_type_id,
-                )?.display_name || "Unknown"
-              }}
-            </span>
-          </template>
-          <template #duration-cell="{ row }">
-            <span class="text-sm">
-              {{
-                parseAbsoluteToLocal(row.original.endtime).compare(
-                  parseAbsoluteToLocal(row.original.start_time),
-                ) /
-                60 /
-                1000
-              }}
-              mins
-            </span>
-          </template>
-        </UTable>
-      </template>
-    </UDashboardPanel>
-  </div>
+    <template #body>
+      <AppointmentFilters
+        v-model:status="status"
+        v-model:appointment-type="appointment_type"
+        :loading="loading"
+        :date-range="dateRange"
+        @update:date-range="
+          (e) => {
+            from_date = e?.start ? parseDate(e.start.toString()) : undefined;
+            to_date = e?.end ? parseDate(e.end.toString()) : undefined;
+            fetchAppointments();
+          }
+        "
+        @refresh="fetchAppointments"
+      />
+
+      <AppointmentTable
+        :appointments="appointments"
+        :page="page"
+        :limit="limit"
+        :loading="loading"
+      />
+      <div class="flex justify-center border-t border-default pt-4 -mt-6">
+        <UPagination
+          :default-page="page + 1"
+          :items-per-page="limit"
+          :total="Number(count)"
+          @update:page="
+            (p) => {
+              page = p - 1;
+            }
+          "
+        />
+      </div>
+    </template>
+  </UDashboardPanel>
 </template>
