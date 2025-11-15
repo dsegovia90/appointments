@@ -8,14 +8,17 @@ export const useAppointmentTypesAdminStore = defineStore(
   () => {
     const api = useAppointmentTypesAPI();
 
-    const appointmentTypes = ref<AppointmentType[]>([]);
+    const appointmentTypesMap = ref<Map<number, AppointmentType>>(new Map());
     const loading = ref(true);
     const selectedAppointmentType = ref<AppointmentType | null>(null);
 
     const fetchAppointmentTypes = async () => {
       loading.value = true;
       try {
-        appointmentTypes.value = await api.fetchAll();
+        const fetchedAppointmentTypes = await api.fetchAll();
+        appointmentTypesMap.value = new Map(
+          fetchedAppointmentTypes.map((type) => [type.id, type]),
+        );
       } catch (error) {
         console.error("Failed to fetch appointment types:", error);
       } finally {
@@ -29,7 +32,10 @@ export const useAppointmentTypesAdminStore = defineStore(
       loading.value = true;
       try {
         const newAppointmentType = await api.create(params);
-        appointmentTypes.value.push(newAppointmentType);
+        appointmentTypesMap.value.set(
+          newAppointmentType.id,
+          newAppointmentType,
+        );
         return newAppointmentType;
       } catch (error) {
         console.error("Failed to create appointment type:", error);
@@ -46,10 +52,10 @@ export const useAppointmentTypesAdminStore = defineStore(
       loading.value = true;
       try {
         const updatedAppointmentType = await api.update(id, params);
-        const index = appointmentTypes.value.findIndex((at) => at.id === id);
-        if (index !== -1) {
-          appointmentTypes.value[index] = updatedAppointmentType;
-        }
+        appointmentTypesMap.value.set(
+          updatedAppointmentType.id,
+          updatedAppointmentType,
+        );
         return updatedAppointmentType;
       } catch (error) {
         console.error("Failed to update appointment type:", error);
@@ -63,9 +69,7 @@ export const useAppointmentTypesAdminStore = defineStore(
       loading.value = true;
       try {
         await api.destroy(id);
-        appointmentTypes.value = appointmentTypes.value.filter(
-          (at) => at.id !== id,
-        );
+        appointmentTypesMap.value.delete(id);
       } catch (error) {
         console.error("Failed to delete appointment type:", error);
         throw error;
@@ -78,8 +82,12 @@ export const useAppointmentTypesAdminStore = defineStore(
       selectedAppointmentType.value = appointmentType;
     };
 
+    onMounted(() => {
+      fetchAppointmentTypes();
+    });
+
     return {
-      appointmentTypes,
+      appointmentTypesMap,
       loading,
       selectedAppointmentType,
       fetchAppointmentTypes,

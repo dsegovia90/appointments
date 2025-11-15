@@ -104,16 +104,6 @@ const columns: TableColumn<AppointmentType>[] = [
     header: "Actions",
   },
 ];
-
-// Refresh data
-const handleRefresh = () => {
-  appointmentTypesStore.fetchAppointmentTypes();
-};
-
-// Load data on mount
-onMounted(() => {
-  appointmentTypesStore.fetchAppointmentTypes();
-});
 </script>
 
 <template>
@@ -136,7 +126,7 @@ onMounted(() => {
           variant="outline"
           :loading="appointmentTypesStore.loading"
           :disabled="appointmentTypesStore.loading"
-          @click="handleRefresh"
+          @click="appointmentTypesStore.fetchAppointmentTypes"
         >
           Refresh
         </UButton>
@@ -147,13 +137,13 @@ onMounted(() => {
       <UCard
         v-if="
           appointmentTypesStore.loading &&
-          appointmentTypesStore.appointmentTypes.length === 0
+          appointmentTypesStore.appointmentTypesMap.size === 0
         "
       >
         <div
           v-if="
             appointmentTypesStore.loading &&
-            appointmentTypesStore.appointmentTypes.length === 0
+            appointmentTypesStore.appointmentTypesMap.size === 0
           "
           class="flex justify-center items-center h-64"
         >
@@ -164,7 +154,7 @@ onMounted(() => {
         </div>
 
         <div
-          v-else-if="appointmentTypesStore.appointmentTypes.length === 0"
+          v-else-if="appointmentTypesStore.appointmentTypesMap.size === 0"
           class="text-center py-12"
         >
           <UIcon
@@ -186,7 +176,7 @@ onMounted(() => {
         v-else
         class="border border-muted rounded-lg"
         :columns="columns"
-        :data="appointmentTypesStore.appointmentTypes"
+        :data="Array.from(appointmentTypesStore.appointmentTypesMap.values())"
         :loading="appointmentTypesStore.loading"
       >
         <template #name-cell="{ row }">
