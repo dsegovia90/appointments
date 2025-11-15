@@ -26,6 +26,7 @@ pub struct Model {
     Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize, ts_rs::TS,
 )]
 #[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+#[ts(repr(enum = name))]
 pub enum Status {
     #[sea_orm(string_value = "Booked")]
     Booked,

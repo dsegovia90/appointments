@@ -21,8 +21,8 @@ pub struct AppointmentsQueryParams {
     pub page: u64,
     #[serde(default = "default_limit")]
     pub limit: u64,
-    pub from_date: Option<DateTimeUtc>,
-    pub to_date: Option<DateTimeUtc>,
+    pub from_date: Option<Date>,
+    pub to_date: Option<Date>,
     pub status: Option<Status>,
     pub appointment_type: Option<i32>,
 }

@@ -10,9 +10,10 @@ use crate::{
 
 pub use super::_entities::appointments::{ActiveModel, Entity, Model};
 use super::{_entities::appointments::Column, appointment_types, users};
-use chrono::Utc;
+use chrono::{TimeZone, Utc};
 use chrono_tz::Tz;
 use loco_rs::prelude::*;
+use now::DateTimeNow;
 use sea_orm::{entity::prelude::*, QueryOrder, QuerySelect};
 
 pub type Appointments = Entity;
@@ -149,7 +150,7 @@ impl Entity {
         C: ConnectionTrait,
     {
         let mut appointments_query = Self::find()
-            .order_by_desc(Column::StartTime)
+            .order_by_asc(Column::StartTime)
             .filter(Column::UserId.eq(owner.id));
         if let Some(appointment_type_id) = filters.appointment_type {
             appointments_query =
@@ -158,11 +159,33 @@ impl Entity {
         if let Some(status) = filters.status {
             appointments_query = appointments_query.filter(Column::Status.eq(status));
         }
-        if let Some(start_time) = filters.from_date {
-            appointments_query = appointments_query.filter(Column::StartTime.gt(start_time));
+        if let (Some(start_time), Ok(tz)) = (filters.from_date, owner.timezone.parse::<Tz>()) {
+            // Convert NaiveDate to DateTime<Utc> at start of day in the timezone
+
+            let start_datetime = tz
+                .from_local_datetime(
+                    &start_time
+                        .and_hms_opt(0, 0, 0)
+                        .ok_or_else(|| ModelError::msg("Could not parse start_time."))?,
+                )
+                .single()
+                .ok_or_else(|| ModelError::msg("Could not parse start_time."))?
+                .with_timezone(&Utc);
+            appointments_query = appointments_query.filter(Column::StartTime.gt(start_datetime));
         }
-        if let Some(end_time) = filters.to_date {
-            appointments_query = appointments_query.filter(Column::StartTime.lt(end_time));
+        if let (Some(end_time), Ok(tz)) = (filters.to_date, owner.timezone.parse::<Tz>()) {
+            // Convert NaiveDate to DateTime<Utc> at end of day in the timezone
+            let end_datetime = tz
+                .from_local_datetime(
+                    &end_time
+                        .and_hms_opt(23, 59, 59)
+                        .ok_or_else(|| ModelError::msg("Could not parse start_time."))?,
+                )
+                .single()
+                .ok_or_else(|| ModelError::msg("Could not parse start_time."))?
+                .end_of_day()
+                .with_timezone(&Utc);
+            appointments_query = appointments_query.filter(Column::StartTime.lt(end_datetime));
         }
 
         let count = appointments_query.clone().count(db).await?;
