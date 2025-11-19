@@ -2,12 +2,18 @@
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
-  modules: ["@nuxt/eslint", "@nuxt/ui", "@pinia/nuxt", "@vueuse/nuxt"],
+  modules: [
+    "@nuxt/eslint",
+    "@nuxt/ui",
+    "@pinia/nuxt",
+    "@vueuse/nuxt",
+    "nuxt-vitalizer",
+  ],
   css: ["~/assets/css/main.css"],
   vite: {
     server: {
       proxy: {
-        "/api": {
+        "^/api/(?!_nuxt_icon).*": {
           target: "http://0.0.0.0:5150",
           changeOrigin: true,
         },
