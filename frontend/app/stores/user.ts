@@ -29,7 +29,7 @@ export const useUserStore = defineStore("user", () => {
       })
       .catch((error) => {
         setUser(null);
-        console.log(error);
+        console.error(error);
       })
       .finally(() => {
         loading.value = true;
@@ -53,7 +53,7 @@ export const useUserStore = defineStore("user", () => {
           icon: "lucide:mail-x",
           description: "Please try again later.",
         });
-        console.log(error);
+        console.error(error);
       });
   };
 
@@ -64,7 +64,7 @@ export const useUserStore = defineStore("user", () => {
     })
       .then(setUser)
       .catch((error) => {
-        console.log(error);
+        console.error(error);
       });
   };
 
@@ -87,7 +87,7 @@ export const useUserStore = defineStore("user", () => {
           title: "Error sending magic link!",
           icon: "lucide:mail-x",
         });
-        console.log(error);
+        console.error(error);
       })
       .finally(sideEffect);
   };
@@ -102,13 +102,13 @@ export const useUserStore = defineStore("user", () => {
           icon: "lucide:mail-x",
         });
         router.push("/");
-        console.log(error);
+        console.error(error);
       });
   };
 
   const handleLogout = async () => {
     await api("/api/auth/logout").catch((error) => {
-      console.log(error);
+      console.error(error);
     });
     setUser(null);
   };
@@ -129,7 +129,7 @@ export const useUserStore = defineStore("user", () => {
           title: "Error sending password reset email!",
           icon: "lucide:mail-x",
         });
-        console.log(error);
+        console.error(error);
       });
   };
 
@@ -149,7 +149,7 @@ export const useUserStore = defineStore("user", () => {
           title: "Error changing password!",
           icon: "lucide:x",
         });
-        console.log(error);
+        console.error(error);
       });
   };
 

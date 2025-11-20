@@ -115,8 +115,16 @@ pub async fn booking(
     )
     .await?;
 
+    // TODO: This could be handled by a separate thread. Or even as a worker thread.
     match google_calendars::Model::create_calendars_event(&ctx.db, &user, &appointment).await {
-        Ok(()) => (),
+        Ok(events) => {
+            tracing::info!("Google Calendar event created successfully");
+            appointment
+                .clone()
+                .into_active_model()
+                .attach_google_calendar_events(&ctx.db, events)
+                .await?;
+        }
         Err(err) => {
             tracing::warn!("Failed to create google calendar event: {}", err);
         }

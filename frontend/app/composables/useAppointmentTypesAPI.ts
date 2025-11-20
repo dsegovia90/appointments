@@ -10,7 +10,7 @@ export const useAppointmentTypesAPI = () => {
     try {
       return await api<AppointmentType[]>("/api/appointment_types");
     } catch (error) {
-      console.log(error);
+      console.error(error);
       toast.add({
         title: "Error fetching appointment types",
         description: "Failed to load appointment types. Please try again.",

@@ -1,15 +1,18 @@
+pub use super::_entities::appointments::{ActiveModel, Entity, Model};
+
+use super::{_entities::appointments::Column, appointment_types, users};
 use crate::{
-    controllers::api::appointments::AppointmentsQueryParams,
+    mailers::appointments::AppointmentsMailer,
     models::{
-        _entities::appointments::Status, appointment_types::AppointmentTypes,
+        _entities::appointments::{GoogleCalendarEvent, Status},
+        appointment_types::AppointmentTypes,
+        google_calendars,
         users::CurrentAvailabilityProps,
     },
     our_chrono,
     traits::GenericWindowComparison,
+    views::appointments::AppointmentsQueryParams,
 };
-
-pub use super::_entities::appointments::{ActiveModel, Entity, Model};
-use super::{_entities::appointments::Column, appointment_types, users};
 use chrono::{TimeZone, Utc};
 use chrono_tz::Tz;
 use loco_rs::prelude::*;
@@ -89,6 +92,32 @@ impl Model {
             appointment_type.display_name, self.booker_name
         ))
     }
+
+    pub async fn cancel_appointment(self, ctx: &AppContext, user: &users::Model) -> Result<Self> {
+        if self.start_time <= our_chrono::utc_now() {
+            return Err(Error::Message(
+                "Can not cancel an appointment that has already passed.".to_string(),
+            ));
+        }
+        if self.status == Status::Cancelled {
+            return Err(Error::Message(
+                "Appointment is already cancelled.".to_string(),
+            ));
+        }
+        let google_calendar_events = self.google_calendar_events.clone();
+        let updated_appointment = self.into_active_model().cancel_appointment(&ctx.db).await?;
+
+        AppointmentsMailer::send_cancellation_to_booker(ctx, &updated_appointment).await?;
+
+        if let Err(err) =
+            google_calendars::Model::delete_calendar_events(&ctx.db, user, google_calendar_events)
+                .await
+        {
+            tracing::error!("Failed to delete calendar events: {}", err);
+        }
+
+        Ok(updated_appointment)
+    }
 }
 
 pub struct CreateAppointmentProps<'a> {
@@ -121,6 +150,29 @@ impl ActiveModel {
             ..Default::default()
         };
         Ok(active_model.insert(db).await?)
+    }
+
+    pub async fn cancel_appointment<C>(mut self, db: &C) -> ModelResult<Model>
+    where
+        C: ConnectionTrait,
+    {
+        self.status = ActiveValue::set(Status::Cancelled);
+        self.google_calendar_events = ActiveValue::set(vec![]);
+
+        Ok(self.update(db).await?)
+    }
+
+    pub async fn attach_google_calendar_events<C>(
+        mut self,
+        db: &C,
+        events: Vec<GoogleCalendarEvent>,
+    ) -> ModelResult<Model>
+    where
+        C: ConnectionTrait,
+    {
+        self.google_calendar_events = ActiveValue::set(events);
+
+        Ok(self.update(db).await?)
     }
 }
 
@@ -196,5 +248,17 @@ impl Entity {
             .await?;
 
         Ok((booked, count))
+    }
+
+    pub async fn find_by_id_and_user<C: ConnectionTrait>(
+        db: &C,
+        id: i32,
+        user: &users::Model,
+    ) -> Result<Model> {
+        Self::find_by_id(id)
+            .filter(Column::UserId.eq(user.id))
+            .one(db)
+            .await?
+            .ok_or(Error::Model(ModelError::EntityNotFound))
     }
 }

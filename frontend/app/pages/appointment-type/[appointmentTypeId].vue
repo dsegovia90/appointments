@@ -90,7 +90,6 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
         },
       },
     );
-    console.log("Booking successful");
     submitted.value = true;
   } catch (error) {
     console.error("Booking failed:", error);
