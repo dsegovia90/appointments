@@ -11,6 +11,7 @@
   created_at: "2023-11-12T12:34:56.789Z"
   updated_at: "2023-11-12T12:34:56.789Z"
   appointment_type_id: 2
+  google_calendar_events: []
 - id: 2
   user_id: 1
   booker_name: Cancelled Daniel
@@ -23,3 +24,4 @@
   created_at: "2023-11-12T12:34:56.789Z"
   updated_at: "2023-11-12T12:34:56.789Z"
   appointment_type_id: 2
+  google_calendar_events: []
