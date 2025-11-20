@@ -1,16 +1,21 @@
 <script setup lang="ts">
 import type { Appointment } from "~/bindings/Appointment";
-import type { TableColumn } from "@nuxt/ui";
+import type { DropdownMenuItem, TableColumn } from "@nuxt/ui";
+import type { Row } from "@tanstack/vue-table";
 import { parseAbsoluteToLocal } from "@internationalized/date";
 const UBadge = resolveComponent("UBadge");
+const UDropdownMenu = resolveComponent("UDropdownMenu");
+const UButton = resolveComponent("UButton");
 
 interface Props {
-  appointments: Appointment[];
   page: number;
   limit: number;
   loading: boolean;
 }
 
+const toast = useToast();
+
+const appointments = defineModel<Appointment[]>("appointments");
 const props = defineProps<Props>();
 const appointmentTypes = useAppointmentTypesAdminStore();
 
@@ -59,8 +64,78 @@ const columns: TableColumn<Appointment>[] = [
       }),
   },
   { accessorKey: "status", header: "Status" },
-  { id: "actions", header: "Actions" },
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => {
+      return h(
+        "div",
+        { class: "text-right" },
+        h(
+          UDropdownMenu,
+          {
+            content: {
+              align: "end",
+            },
+            items: getActionItems(row),
+            "aria-label": "Actions dropdown",
+          },
+          () =>
+            h(UButton, {
+              icon: "i-lucide-ellipsis-vertical",
+              color: "neutral",
+              variant: "ghost",
+              class: "ml-auto",
+              "aria-label": "Actions dropdown",
+            }),
+        ),
+      );
+    },
+  },
 ];
+
+const getActionItems = (row: Row<Appointment>): DropdownMenuItem[] => {
+  return [
+    {
+      label: "Cancel Appointment",
+      onSelect: async () => {
+        try {
+          const updatedAppointment = await api<Appointment>(
+            `/api/appointments/cancel/${row.original.id}`,
+            { method: "PATCH" },
+          );
+          const index = appointments.value?.findIndex(
+            (appointment) => appointment.id === updatedAppointment.id,
+          );
+          if (appointments.value && index !== undefined && index !== -1) {
+            appointments.value[index] = updatedAppointment;
+          }
+
+          toast.add({
+            title: "Successfully canceled appointment.",
+            color: "success",
+          });
+        } catch (error: unknown) {
+          if (error instanceof Error) {
+            toast.add({
+              title: "Failed to cancel appointment.",
+              description: error.message,
+              color: "error",
+            });
+          } else {
+            toast.add({
+              title: "Failed to cancel appointment.",
+              description: "An unexpected error occurred.",
+              color: "error",
+            });
+          }
+
+          console.error(error);
+        }
+      },
+    },
+  ];
+};
 </script>
 >
 <template>
