@@ -2,6 +2,8 @@ use crate::{
     models::weekly_availabilities::{self},
     traits::GenericWindowComparison,
 };
+use chrono::{DateTime, TimeDelta, Utc};
+use google_calendar::types::TimePeriod;
 use serde::{Deserialize, Serialize};
 
 /// Normalizes availability to 0 minutes min and 1440 minutes max

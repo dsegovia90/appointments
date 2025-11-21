@@ -112,7 +112,7 @@ impl ActiveModel {
     {
         let rest = WeeklyAvailabilities::find_by_user(db, props.user, vec![]).await?;
 
-        if Model::clash_check(&props, &rest) {
+        if props.clash_check(&rest) {
             return Err(ModelError::Message("Clashing periods.".to_string()));
         }
 
@@ -137,7 +137,7 @@ impl ActiveModel {
         let this = self.clone().try_into_model().map_err(ModelError::from)?;
         let rest = WeeklyAvailabilities::find_by_user(db, user, vec![&this]).await?;
 
-        if Model::clash_check(&props, &rest) {
+        if props.clash_check(&rest) {
             return Err(MyError::Clash(this));
         }
 
