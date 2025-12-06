@@ -50,37 +50,43 @@ const handleCreate = () => {
 </script>
 
 <template>
-  <div ref="target" class="h-[1440px] relative">
-    <div
-      v-if="
-        !isOutside && !clasherChecker && !weeklyAvailabilityStore.isUpdating
-      "
-      :style="{
-        top: `${newTop}px`,
-        height: `${AVAILABILITY_WINDOW_HEIGHT}px`,
-        left: '0',
-      }"
-      class="bg-neutral-200 flex-col absolute w-full flex justify-between items-center p-2 rounded"
-      @click="handleCreate"
-    >
-      <p class="relative z-10 text-black font-strong">
-        {{ getAvailabilityTime(newTop) }}
-      </p>
-
-      <p class="relative z-10 text-black font-strong">
-        {{ getAvailabilityTime(newBottom) }}
-      </p>
+  <div>
+    <div class="sticky -top-6 bg-default z-20">
+      <div class="p-2 text-center truncate">{{ weekday.label }}</div>
     </div>
+    <div ref="target" class="h-[1480px] relative">
+      <div
+        v-if="
+          !isOutside && !clasherChecker && !weeklyAvailabilityStore.isUpdating
+        "
+        :style="{
+          top: `${newTop}px`,
+          height: `${AVAILABILITY_WINDOW_HEIGHT}px`,
+          left: '0',
+        }"
+        class="bg-neutral-200 flex-col absolute w-full flex justify-between items-center p-2 rounded"
+        @click="handleCreate"
+      >
+        <p class="relative z-10 text-black font-strong">
+          {{ getAvailabilityTime(newTop) }}
+        </p>
 
-    <template v-if="weekdayAvailability">
-      <AvailabilityWindow
-        v-for="availability in weekdayAvailability"
-        :key="availability.model.id"
-        :availability="availability"
-        :weekday="weekdayIndex"
-        @delete.once="weeklyAvailabilityStore.handleRemove"
-        @update="weeklyAvailabilityStore.handleUpdate"
-      />
-    </template>
+        <p class="relative z-10 text-black font-strong">
+          {{ getAvailabilityTime(newBottom) }}
+        </p>
+      </div>
+
+      <template v-if="weekdayAvailability">
+        <AvailabilityWindow
+          v-for="availability in weekdayAvailability"
+          :key="availability.model.id"
+          :availability="availability"
+          :weekday="weekdayIndex"
+          :target-ref="target"
+          @delete.once="weeklyAvailabilityStore.handleRemove"
+          @update="weeklyAvailabilityStore.handleUpdate"
+        />
+      </template>
+    </div>
   </div>
 </template>

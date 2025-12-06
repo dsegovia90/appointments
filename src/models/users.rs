@@ -426,7 +426,7 @@ impl Model {
                             start: time_cursor.to_utc(),
                             end: (time_cursor + appointment_duration).to_utc(),
                         };
-                        if !appointments::Model::clash_check(&window, &my_vec) {
+                        if !window.clash_check(&my_vec) {
                             windows.push(window);
                         }
                     }

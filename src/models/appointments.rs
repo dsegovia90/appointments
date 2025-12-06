@@ -1,15 +1,23 @@
+pub use super::_entities::appointments::{ActiveModel, Entity, Model};
+
+use super::{_entities::appointments::Column, appointment_types, users};
 use crate::{
-    models::{appointment_types::AppointmentTypes, users::CurrentAvailabilityProps},
+    mailers::appointments::AppointmentsMailer,
+    models::{
+        _entities::appointments::{GoogleCalendarEvent, Status},
+        appointment_types::AppointmentTypes,
+        google_calendars,
+        users::CurrentAvailabilityProps,
+    },
     our_chrono,
     traits::GenericWindowComparison,
+    views::appointments::AppointmentsQueryParams,
 };
-
-pub use super::_entities::appointments::{ActiveModel, Entity, Model};
-use super::{_entities::appointments::Column, appointment_types, users};
-use chrono::Utc;
+use chrono::{TimeZone, Utc};
 use chrono_tz::Tz;
 use loco_rs::prelude::*;
-use sea_orm::{entity::prelude::*, QueryOrder};
+use now::DateTimeNow;
+use sea_orm::{entity::prelude::*, QueryOrder, QuerySelect};
 
 pub type Appointments = Entity;
 
@@ -84,6 +92,32 @@ impl Model {
             appointment_type.display_name, self.booker_name
         ))
     }
+
+    pub async fn cancel_appointment(self, ctx: &AppContext, user: &users::Model) -> Result<Self> {
+        if self.start_time <= our_chrono::utc_now() {
+            return Err(Error::Message(
+                "Can not cancel an appointment that has already passed.".to_string(),
+            ));
+        }
+        if self.status == Status::Cancelled {
+            return Err(Error::Message(
+                "Appointment is already cancelled.".to_string(),
+            ));
+        }
+        let google_calendar_events = self.google_calendar_events.clone();
+        let updated_appointment = self.into_active_model().cancel_appointment(&ctx.db).await?;
+
+        AppointmentsMailer::send_cancellation_to_booker(ctx, &updated_appointment).await?;
+
+        if let Err(err) =
+            google_calendars::Model::delete_calendar_events(&ctx.db, user, google_calendar_events)
+                .await
+        {
+            tracing::error!("Failed to delete calendar events: {}", err);
+        }
+
+        Ok(updated_appointment)
+    }
 }
 
 pub struct CreateAppointmentProps<'a> {
@@ -110,12 +144,35 @@ impl ActiveModel {
             booker_email: ActiveValue::set(props.booker_email),
             start_time: ActiveValue::set(props.start_time.into()),
             endtime: ActiveValue::set(props.endtime.into()),
-            status: ActiveValue::set("Booked".to_string()),
+            status: ActiveValue::set(Status::Booked),
             user_id: ActiveValue::set(props.user.id),
             appointment_type_id: ActiveValue::set(props.appointment_type.id),
             ..Default::default()
         };
         Ok(active_model.insert(db).await?)
+    }
+
+    pub async fn cancel_appointment<C>(mut self, db: &C) -> ModelResult<Model>
+    where
+        C: ConnectionTrait,
+    {
+        self.status = ActiveValue::set(Status::Cancelled);
+        self.google_calendar_events = ActiveValue::set(vec![]);
+
+        Ok(self.update(db).await?)
+    }
+
+    pub async fn attach_google_calendar_events<C>(
+        mut self,
+        db: &C,
+        events: Vec<GoogleCalendarEvent>,
+    ) -> ModelResult<Model>
+    where
+        C: ConnectionTrait,
+    {
+        self.google_calendar_events = ActiveValue::set(events);
+
+        Ok(self.update(db).await?)
     }
 }
 
@@ -134,5 +191,74 @@ impl Entity {
             .await?;
 
         Ok(booked)
+    }
+
+    pub async fn find_by_user_with_filters<C>(
+        db: &C,
+        owner: &users::Model,
+        filters: AppointmentsQueryParams,
+    ) -> ModelResult<(Vec<Model>, u64)>
+    where
+        C: ConnectionTrait,
+    {
+        let mut appointments_query = Self::find()
+            .order_by_asc(Column::StartTime)
+            .filter(Column::UserId.eq(owner.id));
+        if let Some(appointment_type_id) = filters.appointment_type {
+            appointments_query =
+                appointments_query.filter(Column::AppointmentTypeId.eq(appointment_type_id));
+        }
+        if let Some(status) = filters.status {
+            appointments_query = appointments_query.filter(Column::Status.eq(status));
+        }
+        if let (Some(start_time), Ok(tz)) = (filters.from_date, owner.timezone.parse::<Tz>()) {
+            // Convert NaiveDate to DateTime<Utc> at start of day in the timezone
+
+            let start_datetime = tz
+                .from_local_datetime(
+                    &start_time
+                        .and_hms_opt(0, 0, 0)
+                        .ok_or_else(|| ModelError::msg("Could not parse start_time."))?,
+                )
+                .single()
+                .ok_or_else(|| ModelError::msg("Could not parse start_time."))?
+                .with_timezone(&Utc);
+            appointments_query = appointments_query.filter(Column::StartTime.gt(start_datetime));
+        }
+        if let (Some(end_time), Ok(tz)) = (filters.to_date, owner.timezone.parse::<Tz>()) {
+            // Convert NaiveDate to DateTime<Utc> at end of day in the timezone
+            let end_datetime = tz
+                .from_local_datetime(
+                    &end_time
+                        .and_hms_opt(23, 59, 59)
+                        .ok_or_else(|| ModelError::msg("Could not parse start_time."))?,
+                )
+                .single()
+                .ok_or_else(|| ModelError::msg("Could not parse start_time."))?
+                .end_of_day()
+                .with_timezone(&Utc);
+            appointments_query = appointments_query.filter(Column::StartTime.lt(end_datetime));
+        }
+
+        let count = appointments_query.clone().count(db).await?;
+        let booked = appointments_query
+            .offset(filters.page * filters.limit)
+            .limit(filters.limit)
+            .all(db)
+            .await?;
+
+        Ok((booked, count))
+    }
+
+    pub async fn find_by_id_and_user<C: ConnectionTrait>(
+        db: &C,
+        id: i32,
+        user: &users::Model,
+    ) -> Result<Model> {
+        Self::find_by_id(id)
+            .filter(Column::UserId.eq(user.id))
+            .one(db)
+            .await?
+            .ok_or(Error::Model(ModelError::EntityNotFound))
     }
 }

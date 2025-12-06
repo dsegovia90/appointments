@@ -16,19 +16,15 @@ const handleUpdate = async (data: Partial<AdminSettings>) => {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <UPageHeader>
-      <template #title>
-        <h1 class="text-4xl font-bold">Admin Settings</h1>
-      </template>
-      <template #description>
-        <p class="text-sm text-neutral-100 mt-1">
-          Update your admin settings and preferences
-        </p>
-      </template>
-    </UPageHeader>
+  <UDashboardPanel>
+    <template #header>
+      <UDashboardNavbar title="Admin Settings">
+        <template #leading> <UDashboardSidebarCollapse /></template>
+      </UDashboardNavbar>
+    </template>
 
-    <UPageBody>
+    <template #body>
+      <p>Update your admin settings and preferences</p>
       <LoadingLinear v-if="!adminSettings"> Loading... </LoadingLinear>
       <template v-else>
         <h2 class="text-2xl font-bold">General Settings</h2>
@@ -62,6 +58,6 @@ const handleUpdate = async (data: Partial<AdminSettings>) => {
           @submit="(value) => handleUpdate({ google_calendar_settings: value })"
         />
       </template>
-    </UPageBody>
-  </div>
+    </template>
+  </UDashboardPanel>
 </template>

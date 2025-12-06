@@ -9,7 +9,7 @@ logger:
   # Log level, options: trace, debug, info, warn or error.
   level: debug
   # Define the logging format. options: compact, pretty or json
-  format: compact
+  format: pretty
   # By default the logger has filtering only logs that came from your code or logs that came from `loco` framework. to see all third party libraries
   # Uncomment the line below to override to see all third party libraries you can enable this config and override the logger filters.
   # override_filter: trace
@@ -30,10 +30,11 @@ server:
       enable: false
     cors:
       enable: false
+    compression:
+      enable: true
     static:
       enable: true
       must_exist: false
-      precompressed: false
       folder:
         uri: "/"
         path: "frontend/.output/public"

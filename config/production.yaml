@@ -36,6 +36,7 @@ server:
       enable: true
       must_exist: true
       precompressed: true
+      cache_control: max-age=31536000
       folder:
         uri: "/"
         path: ".output/public"

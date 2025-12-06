@@ -49,6 +49,8 @@ pub enum Relation {
     GoogleCalendars,
     #[sea_orm(has_many = "super::oauth_states::Entity")]
     OauthStates,
+    #[sea_orm(has_one = "super::user_settings::Entity")]
+    UserSettings,
     #[sea_orm(has_many = "super::weekly_availabilities::Entity")]
     WeeklyAvailabilities,
 }
@@ -74,6 +76,12 @@ impl Related<super::google_calendars::Entity> for Entity {
 impl Related<super::oauth_states::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::OauthStates.def()
+    }
+}
+
+impl Related<super::user_settings::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::UserSettings.def()
     }
 }
 

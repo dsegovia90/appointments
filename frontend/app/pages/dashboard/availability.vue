@@ -1,16 +1,16 @@
 <script setup lang="ts"></script>
 
 <template>
-  <UDashboardPanel>
+  <UDashboardPanel id="availability">
     <template #header>
-      <UDashboardNavbar title="Integrations">
+      <UDashboardNavbar title="Availability">
         <template #leading> <UDashboardSidebarCollapse /> </template
       ></UDashboardNavbar>
     </template>
-
     <template #body>
-      <p>Add integrations to your appointments platform.</p>
-      <GoogleCalendarIntegration />
+      <p>Manage your availability and their durations</p>
+      <UserSettingsForm />
+      <WeeklyAvailabilityCalendar />
     </template>
   </UDashboardPanel>
 </template>

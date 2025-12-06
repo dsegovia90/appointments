@@ -4,7 +4,10 @@ pub use super::_entities::google_calendars::{ActiveModel, Entity, Model};
 use crate::{
     controllers::api::integrations::google_calendar::OAuthCallbackQueryParams,
     models::{
-        _entities::{admin_settings::GoogleCalendarSettings, google_calendars::Column},
+        _entities::{
+            admin_settings::GoogleCalendarSettings, appointments::GoogleCalendarEvent,
+            google_calendars::Column,
+        },
         admin_settings::AdminSettings,
         appointments,
         oauth_states::{self, OAuthStates},
@@ -15,10 +18,13 @@ use crate::{
         google_calendars::{CalendarSettingParams, CalendarSettingType},
     },
 };
-use futures::future::try_join_all;
-use google_calendar::types::{
-    ConferenceData, ConferenceSolutionKey, CreateConferenceRequest, Event, EventAttendee,
-    EventDateTime, FreeBusyRequestItem, SendUpdates,
+use futures::future::{join_all, try_join_all};
+use google_calendar::{
+    types::{
+        ConferenceData, ConferenceSolutionKey, CreateConferenceRequest, Event, EventAttendee,
+        EventDateTime, FreeBusyRequestItem, SendUpdates,
+    },
+    ClientError,
 };
 use loco_rs::prelude::*;
 use sea_orm::entity::prelude::*;
@@ -302,6 +308,7 @@ impl Model {
                     end: x.end,
                 })
             })
+            .filter(|window| window.start != window.end)
             .collect();
         Ok(availability_windows)
     }
@@ -310,7 +317,7 @@ impl Model {
         db: &C,
         user: &users::Model,
         appointment: &appointments::Model,
-    ) -> Result<()> {
+    ) -> Result<Vec<GoogleCalendarEvent>> {
         let google_calendar_settings = AdminSettings::get_google_calendar_settings(db).await?;
         let google_calendar_config = GoogleCalendars::find_by_user(db, user).await?;
         let redirect_url = OAuthUrl::redirect_uri(&google_calendar_settings)?;
@@ -387,19 +394,64 @@ impl Model {
             .calendars_for_event_handling
             .0
             .into_iter()
-            .map(|item| {
+            .map(|calendar_id| {
                 let client = client.clone();
                 let event = event.clone();
                 async move {
-                    client
+                    let event = client
                         .events()
-                        .insert(&item, 1, 0, false, SendUpdates::All, false, &event)
-                        .await
+                        .insert(&calendar_id, 1, 0, false, SendUpdates::All, false, &event)
+                        .await?;
+                    Ok::<_, ClientError>(GoogleCalendarEvent {
+                        calendar_id,
+                        event_id: event.body.id,
+                    })
                 }
             })
             .collect::<Vec<_>>();
 
-        try_join_all(futures).await.map_err(Error::wrap)?;
+        try_join_all(futures).await.map_err(Error::wrap)
+    }
+
+    pub async fn delete_calendar_events<C: ConnectionTrait>(
+        db: &C,
+        user: &users::Model,
+        events: Vec<GoogleCalendarEvent>,
+    ) -> Result<()> {
+        let google_calendar_settings = AdminSettings::get_google_calendar_settings(db).await?;
+        let google_calendar_config = GoogleCalendars::find_by_user(db, user).await?;
+        let redirect_url = OAuthUrl::redirect_uri(&google_calendar_settings)?;
+
+        let client = google_calendar::Client::new(
+            google_calendar_settings.google_oauth_client_id,
+            google_calendar_settings.google_oauth_secret,
+            redirect_url,
+            google_calendar_config.access_token,
+            google_calendar_config.refresh_token,
+        );
+        let _access_token = client.refresh_access_token().await.map_err(Error::wrap)?;
+
+        let futures = events
+            .into_iter()
+            .map(|event| {
+                let client = client.clone();
+                async move {
+                    client
+                        .events()
+                        .delete(&event.calendar_id, &event.event_id, true, SendUpdates::All)
+                        .await?;
+                    Ok::<_, ClientError>(())
+                }
+            })
+            .collect::<Vec<_>>();
+
+        join_all(futures)
+            .await
+            .into_iter()
+            .filter_map(std::result::Result::err)
+            .for_each(|e| {
+                tracing::error!("Error deleting event: {}", e);
+            });
 
         Ok(())
     }

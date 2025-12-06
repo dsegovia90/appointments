@@ -10,6 +10,7 @@ use crate::models::{appointments, users::Users};
 
 static notify_user: Dir<'_> = include_dir!("src/mailers/appointments/notify_user");
 static notify_client: Dir<'_> = include_dir!("src/mailers/appointments/notify_client");
+static cancel_client: Dir<'_> = include_dir!("src/mailers/appointments/cancel_client");
 
 #[allow(clippy::module_name_repetitions)]
 pub struct AppointmentsMailer {}
@@ -68,6 +69,37 @@ impl AppointmentsMailer {
         Self::mail_template(
             ctx,
             &notify_client,
+            mailer::Args {
+                to: appointment.booker_email.clone(),
+                locals: json!({
+                    "user_name": user.name,
+                    "booker_name": appointment.booker_name,
+                    "start_time": start_time,
+                    "domain": ctx.config.server.full_url()
+                }),
+                ..Default::default()
+            },
+        )
+        .await?;
+
+        Ok(())
+    }
+
+    /// Send an email
+    ///
+    /// # Errors
+    /// When email sending is failed
+    pub async fn send_cancellation_to_booker(
+        ctx: &AppContext,
+        appointment: &appointments::Model,
+    ) -> Result<()> {
+        let user = Users::find_by_id(&ctx.db, appointment.user_id).await?;
+        let booker_timezone = Tz::from_str(&appointment.booker_timezone).map_err(Error::wrap)?;
+        let start_time = appointment.start_time.with_timezone(&booker_timezone);
+
+        Self::mail_template(
+            ctx,
+            &cancel_client,
             mailer::Args {
                 to: appointment.booker_email.clone(),
                 locals: json!({

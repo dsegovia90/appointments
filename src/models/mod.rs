@@ -4,5 +4,6 @@ pub mod appointment_types;
 pub mod appointments;
 pub mod google_calendars;
 pub mod oauth_states;
+pub mod user_settings;
 pub mod users;
 pub mod weekly_availabilities;

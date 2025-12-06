@@ -4,4 +4,5 @@ pub mod appointments;
 pub mod auth;
 pub mod client_facing;
 pub mod integrations;
+pub mod user_settings;
 pub mod weekly_availabilities;
