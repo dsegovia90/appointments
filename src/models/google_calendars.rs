@@ -129,7 +129,7 @@ pub struct OAuthTokenResponseSuccess {
     /// Refresh tokens are valid until the user revokes access or the refresh token expires.
     pub refresh_token: String,
     /// The remaining lifetime of the refresh token in seconds. This value is only set when the user grants time-based access.
-    pub refresh_token_expires_in: i32,
+    pub refresh_token_expires_in: Option<i32>,
     /// The scopes of access granted by the `access_token` expressed as a list of space-delimited, case-sensitive strings.
     pub scope: String,
     /// The type of token returned. This value is always Bearer.
