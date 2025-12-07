@@ -19,17 +19,6 @@ impl MigrationTrait for Migration {
                 .to_owned(),
         )
         .await?;
-        m.alter_table(
-            Table::alter()
-                .table(GoogleCalendars::Table)
-                .add_column(
-                    ColumnDef::new(GoogleCalendars::RefreshTokenExpiresIn)
-                        .integer()
-                        .null(),
-                )
-                .to_owned(),
-        )
-        .await?;
         Ok(())
     }
 
@@ -37,14 +26,7 @@ impl MigrationTrait for Migration {
         m.alter_table(
             Table::alter()
                 .table(GoogleCalendars::Table)
-                .drop_column(GoogleCalendars::RefreshTokenExpiresIn)
-                .to_owned(),
-        )
-        .await?;
-        m.alter_table(
-            Table::alter()
-                .table(GoogleCalendars::Table)
-                .add_column(
+                .add_column_if_not_exists(
                     ColumnDef::new(GoogleCalendars::RefreshTokenExpiresIn)
                         .integer()
                         .not_null(),

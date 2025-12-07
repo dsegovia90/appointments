@@ -15,7 +15,7 @@ mod m20251106_005544_add_google_calendar_json_to_admin_settings;
 mod m20251106_105710_add_collision_and_events_to_google_calendars;
 mod m20251111_073449_user_settings;
 mod m20251119_034526_add_google_calendar_references_to_appointments;
-mod m20251207_183850_edit_google_calendar_refresh_token_expiry_as_optional;
+mod m20251207_195134_remove_google_calendars_refresh_token_expiry;
 pub struct Migrator;
 
 #[async_trait::async_trait]
@@ -34,9 +34,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20251106_105710_add_collision_and_events_to_google_calendars::Migration),
             Box::new(m20251111_073449_user_settings::Migration),
             Box::new(m20251119_034526_add_google_calendar_references_to_appointments::Migration),
-            Box::new(
-                m20251207_183850_edit_google_calendar_refresh_token_expiry_as_optional::Migration,
-            ),
+            Box::new(m20251207_195134_remove_google_calendars_refresh_token_expiry::Migration),
             // inject-above (do not remove this comment)
         ]
     }

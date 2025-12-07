@@ -475,7 +475,6 @@ impl ActiveModel {
             access_token: ActiveValue::Set(props.access_token),
             expires_in: ActiveValue::Set(props.expires_in),
             refresh_token: ActiveValue::Set(props.refresh_token),
-            refresh_token_expires_in: ActiveValue::Set(props.refresh_token_expires_in),
             scope: ActiveValue::Set(props.scope),
             token_type: ActiveValue::Set(props.token_type),
             user_id: ActiveValue::Set(user.id),

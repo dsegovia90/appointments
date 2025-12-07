@@ -29,7 +29,6 @@ pub struct Model {
     pub access_token: String,
     pub expires_in: i32,
     pub refresh_token: String,
-    pub refresh_token_expires_in: Option<i32>,
     pub scope: String,
     pub token_type: String,
     pub user_id: i32,
