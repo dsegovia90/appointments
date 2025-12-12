@@ -4,6 +4,9 @@ on:
   push:
     branches: [production]
 
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -20,11 +23,27 @@ jobs:
           VERSION=$(cargo metadata --format-version=1 --no-deps | jq -r '.packages[0].version')
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Log in to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push
-        run: |
-          IMAGE=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
-          docker build -t $IMAGE:latest -t $IMAGE:${{ steps.cargo_version.outputs.version }} .
-          docker push $IMAGE --all-tags
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ steps.cargo_version.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
