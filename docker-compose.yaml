@@ -4,8 +4,12 @@ services:
     ports:
       - "5150:5150"
     volumes:
-      - sqlite_data:/app/db
+      - ./data:/app/db
+    environment:
+      - DEFAULT_EMAIL_SENDER=${DEFAULT_EMAIL_SENDER}
+      - JWT_SECRET=${JWT_SECRET}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
     restart: unless-stopped
-
-volumes:
-  sqlite_data:
