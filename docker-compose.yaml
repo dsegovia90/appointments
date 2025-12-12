@@ -1,0 +1,11 @@
+services:
+  appointments:
+    image: ghcr.io/dsegovia90/appointments:latest
+    ports:
+      - "5150:5150"
+    volumes:
+      - sqlite_data:/app/db
+    restart: unless-stopped
+
+volumes:
+  sqlite_data:

@@ -1,0 +1,30 @@
+name: Build and Push
+
+on:
+  push:
+    branches: [production]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version from Cargo.toml
+        id: cargo_version
+        run: |
+          VERSION=$(cargo metadata --format-version=1 --no-deps | jq -r '.packages[0].version')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build and push
+        run: |
+          IMAGE=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+          docker build -t $IMAGE:latest -t $IMAGE:${{ steps.cargo_version.outputs.version }} .
+          docker push $IMAGE --all-tags
